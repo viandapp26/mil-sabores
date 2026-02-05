@@ -26,7 +26,7 @@ const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
 
 // 🔗 TU LINK DE MERCADO PAGO (CAMBIAR POR EL TUYO)
-const linkMercadoPago = "https://link.mercadopago.com.ar/viandapp";
+const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
 // Habilitar zona y ubicación
 zonaEnvio.disabled = false;
@@ -374,4 +374,5 @@ function crearFondoEmojis() {
 
 
 crearFondoEmojis();
+
 
