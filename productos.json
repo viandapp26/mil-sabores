@@ -88,7 +88,17 @@
     "stock": 12,
     "imagen": "pancho.avif",
     "categoria": "rapida"
+  },
+
+   {
+    "id": 12,
+    "nombre": "Mozzarella",
+    "precio": 8000,
+    "stock": 12,
+    "imagen": "pizza1.jpg",
+    "categoria": "rapida"
   }
 ]
+
 
 
