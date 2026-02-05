@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Edu+SA+Hand:wght@400..700&display=swap');
+</style>
+
+
+
+<head>
+  <title>VIANDAPP</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div id="fondo-emojis"></div>
+
+<header class="encabezado">
+  <div class="logo-titulo">
+    <h1>VIANDAPP</h1>
+    <img src="logo2.png" alt="Logo de Viandapp">
+  </div>
+<input type="color" id="fondoColor">
+
+  <div class="header-info">
+    <div id="reloj">00:00:00</div>
+    <button id="modoOscuroBtn">🌙</button>
+    <button class="carrito-btn">
+      🛒
+      <span class="carrito-contador">0</span>
+    </button>
+
+  </div>
+</header>
+
+
+<div class="carrito-panel oculto">
+  <h2>Tu pedido</h2>
+
+  <div class="carrito-productos">
+    
+  </div>
+
+  <p class="total">
+    Total: $<span id="total-precio">0</span>
+  </p>
+
+
+  <form id="formPedido">
+    <input
+      type="text"
+      id="nombre"
+      placeholder="Nombre y apellido"
+      required
+    >
+
+    <input
+      type="url"
+      id="ubicacion"
+      placeholder="Link de Google Maps"
+      disabled
+    >
+
+<select id="zonaEnvio" disabled>
+          <option value="0" data-precio="0">Seleccione su barrio/zona para envíos</option>
+          <option value="centro" data-precio="500">Candelaria Centro - $500</option>
+          <option value="barrio2" data-precio="800">B° 2 de Febrero / Anselmo - $800</option>
+          <option value="afueras" data-precio="1200">Otras zonas / Garupá - $1200</option>
+        </select>
+        <!-- MÉTODO DE PAGO -->
+<select id="metodoPago" required>
+  <option value="">Seleccione método de pago</option>
+  <option value="efectivo">Efectivo</option>
+  <option value="mercadopago">Billeteras Virtuales</option>
+</select>
+
+<!-- BOTÓN MERCADO PAGO -->
+<button type="button" id="btnPagarMP" style="display:none;">
+  💳 Transferencia (Billeteras Virtuales)
+</button>
+
+<!-- CONFIRMACIÓN DE PAGO -->
+<label style="display:none;" id="confirmacionPago">
+  <input type="checkbox" id="pagoRealizado">
+  Ya realicé el pago
+</label>
+
+
+    <button type="submit" class="confirmar-btn">
+      Confirmar pedido
+    </button>
+  </form>
+</div>
+
+<h2 class="titulo-seccion">Nuestras Viandas</h2>
+<div class="productos-section">
+    <button id="prev-viandas">◀</button>
+    <div class="carrusel-viewport">
+        <div id="carrusel-viandas" class="carrusel"></div>
+    </div>
+    <button id="next-viandas">▶</button>
+</div>
+
+<h2 class="titulo-seccion">Comida Rápida</h2>
+<div class="productos-section">
+    <button id="prev-rapida">◀</button>
+    <div class="carrusel-viewport">
+        <div id="carrusel-rapida" class="carrusel"></div>
+    </div>
+    <button id="next-rapida">▶</button>
+</div>
+
+<div class="frase-cinta">
+  <span>🍽️ Cocinamos hoy para que vos descanses 💙</span>
+</div>
+
+
+
+<div id="panel-admin" class="panel-admin">
+  <!-- Aquí aparecerán los pedidos pendientes -->
+</div>
+<section class="productos-section">
+  ...
+</section>
+
+
+
+<script src="srcipt.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+[
+  {
+    "id": 1,
+    "nombre": "Milanesas con Puré",
+    "precio": 2500,
+    "stock": 12,
+    "imagen": "milanesa.jpg",
+    "categoria": "vianda"
+  },
+  {
+    "id": 2,
+    "nombre": "Zapallitos rellenos",
+    "precio": 2300,
+    "stock": 12,
+    "imagen": "zapallitos.jpg",
+    "categoria": "vianda"
+  },
+  {
+    "id": 3,
+    "nombre": "Hamburguesitas de lenteja",
+    "precio": 2700,
+    "stock": 12,
+    "imagen": "lentejas.jfif",
+    "categoria": "vianda"
+  },
+  {
+    "id": 4,
+    "nombre": "Ensalada de frutas",
+    "precio": 2200,
+    "stock": 12,
+    "imagen": "frutas.jfif",
+    "categoria": "vianda"
+  },
+  {
+    "id": 5,
+    "nombre": "Pechuga al horno",
+    "precio": 2600,
+    "stock": 12,
+    "imagen": "pechuga.jfif",
+    "categoria": "vianda"
+  },
+  {
+    "id": 6,
+    "nombre": "Milanesa Napolitana",
+    "precio": 2600,
+    "stock": 12,
+    "imagen": "napolitana.jpg",
+    "categoria": "rapida"
+  },
+  {
+    "id": 7,
+    "nombre": "Medallones de Pescado",
+    "precio": 2600,
+    "stock": 12,
+    "imagen": "images.jfif",
+    "categoria": "vianda"
+  },
+  {
+    "id": 8,
+    "nombre": "Empanadas de jamón y queso",
+    "precio": 2600,
+    "stock": 12,
+    "imagen": "empanadas.jfif",
+    "categoria": "rapida"
+  },
+  {
+    "id": 9,
+    "nombre": "Hamburguesa Completa",
+    "precio": 4500,
+    "stock": 12,
+    "imagen": "hamburguesa.jfif",
+    "categoria": "rapida"
+  },
+
+  {
+    "id": 10,
+    "nombre": "Tacos",
+    "precio": 2000,
+    "stock": 12,
+    "imagen": "tacos.jfif",
+    "categoria": "rapida"
+  },
+
+  {
+    "id": 11,
+    "nombre": "Panchos",
+    "precio": 2000,
+    "stock": 12,
+    "imagen": "pancho.avif",
+    "categoria": "rapida"
+  }
+]
+
+

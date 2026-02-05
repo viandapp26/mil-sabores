@@ -1,0 +1,668 @@
+/* =========================
+   VARIABLES DE COLOR
+========================= */
+
+:root {
+  --color-fondo: #ffffff;
+  --color-texto: #111111;
+  --color-card: #f3f3f3;
+  --color-borde: #dddddd;
+  --color-header: beige;
+}
+
+body.oscuro {
+  --color-fondo: #121212;
+  --color-texto: #ffffff;
+  --color-card: #1e1e1e;
+  --color-borde: #333333;
+  --color-header: #1e1e1e;
+}
+
+/* =========================
+   BASE
+========================= */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* solo bloquea lateral */
+}
+
+
+body {
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: 'Poppins', sans-serif;
+}
+
+/* =========================
+   ENCABEZADO
+========================= */
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+  background-color: var(--color-header);
+  padding: 24px 40px;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.logo-titulo,
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  white-space: nowrap;
+}
+
+.encabezado img {
+  width: 150px;
+}
+
+.encabezado h1 {
+  font-family: "Edu SA Hand", cursive;
+  font-size: 60px;
+  margin: 0;
+}
+
+#reloj {
+  font-size: 18px;
+}
+
+/* =========================
+   BOTONES HEADER
+========================= */
+
+#modoOscuroBtn {
+  font-size: 18px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--color-borde);
+  background-color: var(--color-card);
+  cursor: pointer;
+}
+
+.carrito-btn {
+  font-size: 24px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background-color: var(--color-card);
+  border: 2px solid var(--color-borde);
+  cursor: pointer;
+  position: relative;
+}
+
+.carrito-contador {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+/* =========================
+   PANEL CARRITO
+========================= */
+
+.carrito-panel {
+  position: absolute;
+  top: 110px;
+  right: 20px;
+  width: 320px;
+  background: var(--color-card);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+.oculto {
+  display: none;
+}
+
+.total {
+  font-weight: 600;
+}
+
+/* =========================
+   CARRUSEL
+========================= */
+
+.productos-section {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.carrusel-viewport {
+  width: 100%;
+  overflow: hidden;
+}
+
+.carrusel {
+  display: flex;
+  gap: 16px;
+  transition: transform 0.4s ease;
+  padding-left: 16px;
+}
+
+.producto {
+  flex: 0 0 250px;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-borde);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+}
+
+.producto img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.producto button {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #ff9800;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+.carrusel-btn {
+  font-size: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* =========================
+   FONDO EMOJIS
+========================= */
+
+#fondo-emojis {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.emoji-flotante {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.45;
+}
+
+/* =========================
+   RESPONSIVE MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .encabezado {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin: 8px;
+  }
+
+  .logo-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: normal; /* 👈 CLAVE */
+  }
+
+  .encabezado h1 {
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .encabezado img {
+    width: 56px;
+  }
+
+  .header-info {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap; /* 👈 CLAVE */
+  }
+
+  #reloj {
+    width: 100%;
+    text-align: center;
+    font-size: 15px;
+  }
+
+  #modoOscuroBtn,
+  .carrito-btn {
+    padding: 8px 12px;
+    font-size: 20px;
+  }
+
+
+  .carrusel-viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .carrusel {
+    display: flex;
+    width: max-content;
+    gap: 16px;
+    padding-left: 12px;
+  }
+
+  /* 👇 ESPACIADOR REAL AL FINAL */
+  .carrusel::after {
+    content: "";
+    flex: 0 0 12px; /* espacio para terminar el scroll */
+  }
+
+  .producto {
+    flex: 0 0 240px;
+  }
+}
+
+
+
+.panel-admin {
+  display: none !important;
+  background-color: #e3edff;
+}
+
+.panel-admin.mostrar {
+  display: block !important;
+}
+/* =========================
+   FORMULARIO CARRITO (RESTAURADO)
+========================= */
+
+.carrito-panel {
+  background-color: var(--color-card);
+  color: var(--color-texto);
+}
+
+.carrito-panel h2 {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+/* INPUTS */
+#formPedido input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-borde);
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* INPUT DESHABILITADO */
+#formPedido input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* CHECKBOX ENVÍO */
+.envio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.envio input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* TOTAL */
+.total {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 10px 0;
+  text-align: center;
+}
+
+/* BOTÓN CONFIRMAR */
+.confirmar-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #25d366;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.confirmar-btn:hover {
+  background-color: #1ebe5d;
+  transform: translateY(-1px);
+}
+
+.confirmar-btn:active {
+  transform: scale(0.98);
+}
+
+.frase-cinta {
+  margin: 32px auto 18px;
+  width: fit-content;
+  max-width: 92%;
+  padding: 16px 34px;
+
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #eef4ff 60%,
+    #e3edff 100%
+  );
+
+  color: #1e3a8a;
+  font-family: 'Edu SA Hand', cursive;
+  font-size: 1.35rem;
+  text-align: center;
+
+  border-radius: 999px;
+
+  /* 🔥 CLAVE PARA QUE RESALTE */
+  border: 2px solid rgba(30, 58, 138, 0.25);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  position: relative;
+  z-index: 3; /* por encima de emojis */
+}
+
+/* Picos de la cinta */
+.frase-cinta::before,
+.frase-cinta::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  transform: translateY(-50%) rotate(45deg);
+  border: 2px solid rgba(30, 58, 138, 0.25);
+  z-index: -1;
+}
+
+.frase-cinta::before {
+  left: -10px;
+}
+
+.frase-cinta::after {
+  right: -10px;
+}
+
+/* 📱 Mobile */
+@media (max-width: 768px) {
+  .frase-cinta {
+    font-size: 1.05rem;
+    padding: 14px 22px;
+  }
+}
+
+
+#reloj {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+
+  background: linear-gradient(135deg, #222, #444);
+  padding: 8px 14px;
+  border-radius: 10px;
+
+  box-shadow: 
+    0 4px 10px rgba(0,0,0,0.3),
+    inset 0 0 5px rgba(255,255,255,0.1);
+
+  letter-spacing: 1px;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#reloj {
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 6px rgba(255,255,255,0.2);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(0,255,200,0.6);
+  }
+}
+
+.titulo-seccion {
+    background: rgba(255, 255, 255, 0.85); /* Fondo blanco suave */
+    color: #333;                            /* Texto oscuro para contraste */
+    display: inline-block;                  /* Para que el fondo solo ocupe lo necesario */
+    padding: 10px 25px;
+    margin: 20px auto;
+    border-radius: 50px;                    /* Bordes tipo píldora */
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra para elevarlo del fondo */
+    backdrop-filter: blur(5px);             /* Desenfoca los emojis de atrás */
+    border: 2px solid #ffcc00;              /* Un borde amarillo que combine con comida */
+    position: relative;
+    z-index: 10;                            /* Asegura que esté sobre el fondo */
+}
+
+/* Si estás en Modo Oscuro, el título debe cambiar para que se lea */
+body.oscuro .titulo-seccion {
+    background: rgba(30, 30, 30, 0.9);
+    color: #fff;
+    border-color: #ffa500;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Contenedor para centrar el título */
+.titulo-container {
+    text-align: center;
+    width: 100%;
+}
+
+/* Contenedor que agrupa el checkbox y el selector */
+.envio-container {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 15px 0;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Estilo para el texto "¿Solicitar Envío?" */
+.envio-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--text-color, #333);
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+/* El menú desplegable (Select) */
+#zonaEnvio {
+    width: 100%;
+    height: 45px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 2px solid #ffcc00; /* Color temático de comida */
+    background-color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: #333;
+    outline: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Cuando el selector está deshabilitado */
+#zonaEnvio:disabled {
+    background-color: #f2f2f2;
+    border-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Efecto al hacer foco o pasar el mouse */
+#zonaEnvio:not(:disabled):hover {
+    border-color: #ffa500;
+    box-shadow: 0 0 8px rgba(255, 165, 0, 0.3);
+}
+
+/* Ajuste para modo oscuro */
+body.oscuro .envio-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.oscuro #zonaEnvio {
+    background-color: #333;
+    color: #fff;
+    border-color: #555;
+}
+
+body.oscuro #zonaEnvio:not(:disabled) {
+    border-color: #ffa500;
+}
+
+/* Input de ubicación para que combine con el select */
+#ubicacion {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: inherit;
+}
+
+/* ===============================
+   MÉTODOS DE PAGO - VIANDAPP
+================================ */
+
+/* Select método de pago */
+#metodoPago {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+#metodoPago:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+}
+
+/* Botón Mercado Pago */
+#btnPagarMP {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #009ee3, #0072ce);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#btnPagarMP:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 114, 206, 0.4);
+}
+
+#btnPagarMP:active {
+  transform: scale(0.98);
+}
+
+/* Confirmación de pago */
+#confirmacionPago {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px;
+  background-color: #f5faff;
+  border-radius: 10px;
+  border: 1px solid #cce7ff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+#confirmacionPago input {
+  width: 18px;
+  height: 18px;
+  accent-color: #009ee3;
+  cursor: pointer;
+}
+
+/* Animación suave al aparecer */
+#btnPagarMP,
+#confirmacionPago {
+  animation: aparecerPago 0.3s ease;
+}
+
+@keyframes aparecerPago {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
