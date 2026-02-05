@@ -65,7 +65,7 @@ body {
 
 .encabezado h1 {
   font-family: "Edu SA Hand", cursive;
-  font-size: 60px;
+  font-size: 40px;
   margin: 0;
 }
 
@@ -666,3 +666,4 @@ body.oscuro #zonaEnvio:not(:disabled) {
     transform: translateY(0);
   }
 }
+
