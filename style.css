@@ -60,7 +60,7 @@ body {
 }
 
 .encabezado img {
-  width: 200px;
+  width: 250px;
 }
 
 .encabezado h1 {
@@ -666,6 +666,7 @@ body.oscuro #zonaEnvio:not(:disabled) {
     transform: translateY(0);
   }
 }
+
 
 
 
