@@ -1,10 +1,10 @@
-document.addEventListener("DOMContentLoaded", () => {
-
 let productos = [];
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 let stockGuardado = JSON.parse(localStorage.getItem("stockProductos"));
 
+/* ========================= */
 /* ELEMENTOS */
+/* ========================= */
 const totalSpan = document.getElementById("total-precio");
 const contador = document.querySelector(".carrito-contador");
 const productosDiv = document.querySelector(".carrito-productos");
@@ -23,12 +23,22 @@ const reloj = document.getElementById("reloj");
 const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
 /* ========================= */
+/* ABRIR / CERRAR CARRITO */
+/* ========================= */
+carritoBtn.addEventListener("click", () => {
+    carritoPanel.classList.toggle("oculto");
+});
+
+/* ========================= */
 /* MODO OSCURO */
 /* ========================= */
 modoOscuroBtn.addEventListener("click", () => {
     document.body.classList.toggle("modo-oscuro");
-    localStorage.setItem("modoOscuro",
-        document.body.classList.contains("modo-oscuro"));
+
+    localStorage.setItem(
+        "modoOscuro",
+        document.body.classList.contains("modo-oscuro")
+    );
 });
 
 if (localStorage.getItem("modoOscuro") === "true") {
@@ -52,38 +62,40 @@ if (colorGuardado) {
 /* ========================= */
 /* RELOJ */
 /* ========================= */
-setInterval(() => {
-    const ahora = new Date();
-    reloj.textContent =
-        ahora.toLocaleTimeString("es-AR");
-}, 1000);
+function iniciarReloj() {
+    setInterval(() => {
+        const ahora = new Date();
+        const horas = String(ahora.getHours()).padStart(2, "0");
+        const minutos = String(ahora.getMinutes()).padStart(2, "0");
+        const segundos = String(ahora.getSeconds()).padStart(2, "0");
 
-/* ========================= */
-/* ABRIR CARRITO */
-/* ========================= */
-carritoBtn.addEventListener("click", () => {
-    carritoPanel.classList.toggle("oculto");
-});
+        reloj.textContent = `${horas}:${minutos}:${segundos}`;
+    }, 1000);
+}
 
 /* ========================= */
 /* CARGAR PRODUCTOS */
 /* ========================= */
 async function cargarProductos() {
-    const res = await fetch("productos.json");
-    const data = await res.json();
+    try {
+        const res = await fetch("productos.json");
+        const data = await res.json();
 
-    if (stockGuardado) {
-        productos = stockGuardado;
-    } else {
-        productos = data;
-        localStorage.setItem("stockProductos", JSON.stringify(productos));
+        if (stockGuardado) {
+            productos = stockGuardado;
+        } else {
+            productos = data;
+            localStorage.setItem("stockProductos", JSON.stringify(productos));
+        }
+
+        actualizarTodo();
+    } catch (error) {
+        console.error("Error cargando productos:", error);
     }
-
-    actualizarTodo();
 }
 
 /* ========================= */
-/* RENDER */
+/* RENDER SECCIÓN */
 /* ========================= */
 function renderSeccion(categoria, id) {
     const cont = document.getElementById(id);
@@ -96,11 +108,12 @@ function renderSeccion(categoria, id) {
             div.classList.add("producto");
 
             div.innerHTML = `
+                <img src="${prod.imagen}" alt="${prod.nombre}">
                 <h3>${prod.nombre}</h3>
                 <p>$${prod.precio}</p>
                 <p>Stock: ${prod.stock}</p>
                 <button ${prod.stock <= 0 ? "disabled" : ""}>
-                    Agregar
+                    ${prod.stock <= 0 ? "Sin stock" : "Agregar"}
                 </button>
             `;
 
@@ -112,7 +125,7 @@ function renderSeccion(categoria, id) {
 }
 
 /* ========================= */
-/* AGREGAR */
+/* AGREGAR AL CARRITO */
 /* ========================= */
 function agregarAlCarrito(id) {
     const prod = productos.find(p => p.id === id);
@@ -129,23 +142,13 @@ function agregarAlCarrito(id) {
 }
 
 /* ========================= */
-/* QUITAR PRODUCTO */
+/* ACTUALIZAR TODO */
 /* ========================= */
-function quitarDelCarrito(id) {
-    const item = carrito.find(p => p.id === id);
-    if (!item) return;
-
-    item.cantidad--;
-
-    const prod = productos.find(p => p.id === id);
-    prod.stock++;
-
-    if (item.cantidad <= 0) {
-        carrito = carrito.filter(p => p.id !== id);
-    }
-
-    localStorage.setItem("stockProductos", JSON.stringify(productos));
-    actualizarTodo();
+function actualizarTodo() {
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+    renderSeccion("vianda", "carrusel-viandas");
+    renderSeccion("rapida", "carrusel-rapida");
+    actualizarCarrito();
 }
 
 /* ========================= */
@@ -163,44 +166,121 @@ function actualizarCarrito() {
         const div = document.createElement("div");
         div.style.display = "flex";
         div.style.justifyContent = "space-between";
-        div.style.alignItems = "center";
-        div.style.marginBottom = "8px";
+        div.style.padding = "5px 0";
 
         div.innerHTML = `
-            <span>${i.nombre} x${i.cantidad}</span>
-            <button style="background:red;color:white;border:none;padding:4px 8px;border-radius:6px;">X</button>
+            <span>${i.nombre}</span>
+            <span>x${i.cantidad}</span>
         `;
-
-        div.querySelector("button")
-            .addEventListener("click", () => quitarDelCarrito(i.id));
 
         productosDiv.appendChild(div);
     });
+
+    zonaEnvio.disabled = false;
+    ubicacionInput.disabled = false;
 
     const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
     const envio = parseInt(opcion?.dataset.precio) || 0;
 
     total += envio;
 
-    totalSpan.textContent = total;
-    contador.textContent = cantidad;
+    totalSpan.innerText = total;
+    contador.innerText = cantidad;
     contador.style.display = cantidad > 0 ? "inline-block" : "none";
 }
 
-function actualizarTodo() {
+/* ========================= */
+/* CAMBIO ZONA */
+/* ========================= */
+zonaEnvio.addEventListener("change", actualizarCarrito);
+
+/* ========================= */
+/* FORMULARIO */
+/* ========================= */
+document.getElementById("formPedido").addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (carrito.length === 0) return;
+
+    const nombre = document.getElementById("nombre").value;
+    const ubicacion = ubicacionInput.value;
+    const metodo = metodoPago.value;
+
+    if (metodo === "mercadopago" && !pagoRealizado.checked) {
+        alert("Confirmá el pago antes de continuar");
+        return;
+    }
+
+    let total = 0;
+    let mensaje = `*Pedido de ${nombre}*%0A`;
+
+    carrito.forEach(i => {
+        total += i.precio * i.cantidad;
+        mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
+    });
+
+    const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
+    const envio = parseInt(opcion?.dataset.precio) || 0;
+    total += envio;
+
+    mensaje += `%0A*Total:* $${total}`;
+
+    if (ubicacion) {
+        mensaje += `%0A📍 ${encodeURIComponent(ubicacion)}`;
+    }
+
+    window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
+
+    carrito = [];
     localStorage.setItem("carrito", JSON.stringify(carrito));
-    renderSeccion("vianda", "carrusel-viandas");
-    renderSeccion("rapida", "carrusel-rapida");
-    actualizarCarrito();
+    carritoPanel.classList.add("oculto");
+
+    actualizarTodo();
+});
+
+/* ========================= */
+/* MERCADO PAGO */
+/* ========================= */
+metodoPago.addEventListener("change", () => {
+    if (metodoPago.value === "mercadopago") {
+        btnPagarMP.style.display = "block";
+        confirmacionPago.style.display = "block";
+    } else {
+        btnPagarMP.style.display = "none";
+        confirmacionPago.style.display = "none";
+        pagoRealizado.checked = false;
+    }
+});
+
+btnPagarMP.addEventListener("click", () => {
+    window.open(linkMercadoPago, "_blank");
+});
+
+/* ========================= */
+/* EMOJIS */
+/* ========================= */
+function crearFondoEmojis() {
+    const cont = document.getElementById("fondo-emojis");
+    const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑"];
+
+    for (let i = 0; i < 40; i++) {
+        const s = document.createElement("span");
+        s.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        s.style.position = "absolute";
+        s.style.left = Math.random() * 100 + "vw";
+        s.style.top = Math.random() * 100 + "vh";
+        cont.appendChild(s);
+    }
 }
 
 /* ========================= */
-/* INICIAR */
+/* INICIAR TODO */
 /* ========================= */
 cargarProductos();
+crearFondoEmojis();
+iniciarReloj();
 actualizarTodo();
 
-});
+
 
 
 
