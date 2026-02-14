@@ -281,6 +281,44 @@ iniciarReloj();
 actualizarTodo();
 
 
+document.addEventListener("DOMContentLoaded", function () {
+
+  /* ========================= */
+  /*        MODO OSCURO        */
+  /* ========================= */
+
+  const botonModo = document.getElementById("modoOscuro");
+
+  botonModo.addEventListener("click", function () {
+    document.body.classList.toggle("dark-mode");
+  });
+
+
+
+  /* ========================= */
+  /*          CARRUSEL         */
+  /* ========================= */
+
+  const carrusel = document.querySelector(".carrusel");
+  const slides = document.querySelectorAll(".slide");
+
+  let index = 0;
+
+  function moverCarrusel() {
+    index++;
+    if (index >= slides.length) {
+      index = 0;
+    }
+
+    carrusel.style.transform = `translateX(-${index * 100}%)`;
+  }
+
+  setInterval(moverCarrusel, 3000);
+
+});
+
+
+
 
 
 
