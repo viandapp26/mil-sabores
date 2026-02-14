@@ -750,6 +750,28 @@ body.dark-mode #reloj {
   color: #00ffcc;
 }
 
+.seccion-cerrada {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(80%);
+  position: relative;
+}
+
+.seccion-cerrada::after {
+  content: "CERRADO POR HORARIO";
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: red;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 18px;
+  z-index: 20;
+}
+
 
 
 
