@@ -36,6 +36,38 @@ ubicacionInput.disabled = false;
 /***********************
   1. CARGA DE DATOS
 ***********************/
+
+/***********************
+  CONTROL DE HORARIOS
+***********************/
+function estaEnHorario(inicio, fin) {
+    const ahora = new Date();
+    const hora = ahora.getHours();
+    return hora >= inicio && hora < fin;
+}
+
+function controlarHorarios() {
+    const viandasActivas = estaEnHorario(7, 11);
+    const rapidaActiva = estaEnHorario(19, 22);
+
+    const seccionViandas = document.getElementById("carrusel-viandas").parentElement;
+    const seccionRapida = document.getElementById("carrusel-rapida").parentElement;
+
+    if (!viandasActivas) {
+        seccionViandas.classList.add("seccion-cerrada");
+    } else {
+        seccionViandas.classList.remove("seccion-cerrada");
+    }
+
+    if (!rapidaActiva) {
+        seccionRapida.classList.add("seccion-cerrada");
+    } else {
+        seccionRapida.classList.remove("seccion-cerrada");
+    }
+}
+
+
+
 async function cargarProductos() {
     try {
         const res = await fetch("productos.json");
@@ -130,6 +162,18 @@ function agregarAlCarrito(id) {
     const prod = productos.find(p => p.id === id);
     if (!prod || prod.stock <= 0) return;
 
+    const hora = new Date().getHours();
+
+    if (prod.categoria === "vianda" && !(hora >= 7 && hora < 11)) {
+        alert("Las viandas solo están disponibles de 07:00 a 11:00");
+        return;
+    }
+
+    if (prod.categoria === "rapida" && !(hora >= 19 && hora < 22)) {
+        alert("La comida rápida solo está disponible de 19:00 a 22:00");
+        return;
+    }
+
     prod.stock--;
     const item = carrito.find(c => c.id === id);
     if (item) item.cantidad++;
@@ -137,6 +181,7 @@ function agregarAlCarrito(id) {
 
     actualizarTodo();
 }
+
 
 function eliminarDelCarrito(id) {
     const idx = carrito.findIndex(c => c.id === id);
@@ -187,6 +232,24 @@ function actualizarCarrito() {
 zonaEnvio.addEventListener("change", () => {
     actualizarCarrito();
 });
+
+
+
+const horaActual = new Date().getHours();
+
+const hayViandas = carrito.some(p => p.categoria === "vianda");
+const hayRapida = carrito.some(p => p.categoria === "rapida");
+
+if (hayViandas && !(horaActual >= 7 && horaActual < 11)) {
+    alert("Las viandas están fuera de horario (07:00 a 11:00)");
+    return;
+}
+
+if (hayRapida && !(horaActual >= 19 && horaActual < 22)) {
+    alert("La comida rápida está fuera de horario (19:00 a 22:00)");
+    return;
+}
+
 
 /***********************
   4. WHATSAPP + VALIDACIÓN DE PAGO
@@ -373,14 +436,3 @@ function crearFondoEmojis() {
 }
 
 crearFondoEmojis();
-
-
-
-
-
-
-
-
-
-
-
