@@ -1,10 +1,10 @@
 let productos = [];
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-/* STOCK PERSISTENTE */
 let stockGuardado = JSON.parse(localStorage.getItem("stockProductos"));
 
+/* ========================= */
 /* ELEMENTOS */
+/* ========================= */
 const totalSpan = document.getElementById("total-precio");
 const contador = document.querySelector(".carrito-contador");
 const productosDiv = document.querySelector(".carrito-productos");
@@ -17,6 +17,8 @@ const confirmacionPago = document.getElementById("confirmacionPago");
 const carritoBtn = document.querySelector(".carrito-btn");
 const carritoPanel = document.querySelector(".carrito-panel");
 const modoOscuroBtn = document.getElementById("modoOscuroBtn");
+const fondoColor = document.getElementById("fondoColor");
+const reloj = document.getElementById("reloj");
 
 const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
@@ -32,6 +34,7 @@ carritoBtn.addEventListener("click", () => {
 /* ========================= */
 modoOscuroBtn.addEventListener("click", () => {
     document.body.classList.toggle("modo-oscuro");
+
     localStorage.setItem(
         "modoOscuro",
         document.body.classList.contains("modo-oscuro")
@@ -43,11 +46,23 @@ if (localStorage.getItem("modoOscuro") === "true") {
 }
 
 /* ========================= */
-/* RELOJ FUNCIONANDO */
+/* CAMBIO COLOR FONDO */
+/* ========================= */
+fondoColor.addEventListener("input", (e) => {
+    document.body.style.backgroundColor = e.target.value;
+    localStorage.setItem("colorFondo", e.target.value);
+});
+
+const colorGuardado = localStorage.getItem("colorFondo");
+if (colorGuardado) {
+    document.body.style.backgroundColor = colorGuardado;
+    fondoColor.value = colorGuardado;
+}
+
+/* ========================= */
+/* RELOJ */
 /* ========================= */
 function iniciarReloj() {
-    const reloj = document.getElementById("reloj");
-
     setInterval(() => {
         const ahora = new Date();
         const horas = String(ahora.getHours()).padStart(2, "0");
@@ -102,8 +117,8 @@ function renderSeccion(categoria, id) {
                 </button>
             `;
 
-            const boton = div.querySelector("button");
-            boton.addEventListener("click", () => agregarAlCarrito(prod.id));
+            div.querySelector("button")
+                .addEventListener("click", () => agregarAlCarrito(prod.id));
 
             cont.appendChild(div);
         });
@@ -117,7 +132,6 @@ function agregarAlCarrito(id) {
     if (!prod || prod.stock <= 0) return;
 
     prod.stock--;
-
     localStorage.setItem("stockProductos", JSON.stringify(productos));
 
     const item = carrito.find(c => c.id === id);
@@ -132,10 +146,8 @@ function agregarAlCarrito(id) {
 /* ========================= */
 function actualizarTodo() {
     localStorage.setItem("carrito", JSON.stringify(carrito));
-
     renderSeccion("vianda", "carrusel-viandas");
     renderSeccion("rapida", "carrusel-rapida");
-
     actualizarCarrito();
 }
 
@@ -164,7 +176,6 @@ function actualizarCarrito() {
         productosDiv.appendChild(div);
     });
 
-    /* FORMULARIO SIEMPRE HABILITADO */
     zonaEnvio.disabled = false;
     ubicacionInput.disabled = false;
 
@@ -221,8 +232,8 @@ document.getElementById("formPedido").addEventListener("submit", (e) => {
 
     carrito = [];
     localStorage.setItem("carrito", JSON.stringify(carrito));
-
     carritoPanel.classList.add("oculto");
+
     actualizarTodo();
 });
 
@@ -270,38 +281,5 @@ iniciarReloj();
 actualizarTodo();
 
 
-const modoOscuroBtn = document.getElementById("modoOscuroBtn");
-
-modoOscuroBtn.addEventListener("click", () => {
-    document.body.classList.toggle("modo-oscuro");
-
-    if (document.body.classList.contains("modo-oscuro")) {
-        localStorage.setItem("modoOscuro", "activo");
-    } else {
-        localStorage.removeItem("modoOscuro");
-    }
-});
-
-/* Cargar preferencia guardada */
-if (localStorage.getItem("modoOscuro") === "activo") {
-    document.body.classList.add("modo-oscuro");
-}
-
-
-
-const fondoColor = document.getElementById("fondoColor");
-
-/* Cambiar color en tiempo real */
-fondoColor.addEventListener("input", (e) => {
-    document.body.style.backgroundColor = e.target.value;
-    localStorage.setItem("colorFondo", e.target.value);
-});
-
-/* Cargar color guardado */
-const colorGuardado = localStorage.getItem("colorFondo");
-if (colorGuardado) {
-    document.body.style.backgroundColor = colorGuardado;
-    fondoColor.value = colorGuardado;
-}
 
 
