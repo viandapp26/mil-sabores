@@ -19,88 +19,82 @@ const panelAdmin = document.getElementById("panel-admin");
 const modoBtn = document.getElementById("modoOscuroBtn");
 const fondoColorInput = document.getElementById("fondoColor");
 
-// Pago
 const metodoPago = document.getElementById("metodoPago");
 const btnPagarMP = document.getElementById("btnPagarMP");
 const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
 
-// 🔗 TU LINK DE MERCADO PAGO (CAMBIAR POR EL TUYO)
 const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
-// Habilitar zona y ubicación
-zonaEnvio.disabled = false;
-ubc = ubicacionInput;
-ubicacionInput.disabled = false;
-
 /***********************
-  1. CARGA DE DATOS
+  1. CARGA DE PRODUCTOS
 ***********************/
 async function cargarProductos() {
     try {
         const res = await fetch("productos.json");
         const data = await res.json();
+
         const stockLocal = JSON.parse(localStorage.getItem("stockProductos")) || [];
 
-        productos = data.map(pj => {
-            const guardado = stockLocal.find(s => s.id === pj.id);
-            return { ...pj, stock: guardado ? guardado.stock : pj.stock };
+        productos = data.map(p => {
+            const guardado = stockLocal.find(s => s.id === p.id);
+            return { ...p, stock: guardado ? guardado.stock : p.stock };
         });
 
-        actualizarTodo(); 
+        actualizarTodo();
         renderPanelAdmin();
-        setupFlechas(); 
+        setupFlechas();
     } catch (e) {
         console.error("Error cargando productos:", e);
     }
 }
 
 /***********************
-  2. RENDER Y CARRUSELES
+  2. RENDER
 ***********************/
 function renderSeccion(categoria, idContenedor) {
     const contenedor = document.getElementById(idContenedor);
     if (!contenedor) return;
-    
+
     contenedor.innerHTML = "";
     const filtrados = productos.filter(p => p.categoria === categoria);
 
     filtrados.forEach(prod => {
         const div = document.createElement("div");
         div.classList.add("producto");
+
         div.innerHTML = `
             <img src="${prod.imagen}" onerror="this.src='https://via.placeholder.com/150'">
             <h3>${prod.nombre}</h3>
             <p>$${prod.precio}</p>
-            <p class="stock">Stock: ${prod.stock}</p>
+            <p>Stock: ${prod.stock}</p>
             <button onclick="agregarAlCarrito(${prod.id})" ${prod.stock <= 0 ? "disabled" : ""}>
                 ${prod.stock <= 0 ? "Sin stock" : "Agregar"}
             </button>
         `;
+
         contenedor.appendChild(div);
     });
 }
 
-function moverCarrusel(idContenedor, indice) {
-    const carrusel = document.getElementById(idContenedor);
+function moverCarrusel(id, indice) {
+    const carrusel = document.getElementById(id);
     const tarjeta = carrusel.querySelector(".producto");
     if (!tarjeta) return;
-    
-    const estilo = window.getComputedStyle(tarjeta);
-    const margenDerecho = parseFloat(estilo.marginRight) || 20;
-    const anchoTotal = tarjeta.offsetWidth + margenDerecho;
 
-    carrusel.style.transform = `translateX(-${indice * anchoTotal}px)`;
+    const ancho = tarjeta.offsetWidth + 20;
+    carrusel.style.transform = `translateX(-${indice * ancho}px)`;
 }
 
 function setupFlechas() {
     document.getElementById("next-viandas").onclick = () => {
-        const filtrados = productos.filter(p => p.categoria === "vianda");
-        if (indiceViandas < filtrados.length - 1) {
+        const total = productos.filter(p => p.categoria === "vianda").length;
+        if (indiceViandas < total - 1) {
             indiceViandas++;
             moverCarrusel("carrusel-viandas", indiceViandas);
         }
     };
+
     document.getElementById("prev-viandas").onclick = () => {
         if (indiceViandas > 0) {
             indiceViandas--;
@@ -109,12 +103,13 @@ function setupFlechas() {
     };
 
     document.getElementById("next-rapida").onclick = () => {
-        const filtrados = productos.filter(p => p.categoria === "rapida");
-        if (indiceRapida < filtrados.length - 1) {
+        const total = productos.filter(p => p.categoria === "rapida").length;
+        if (indiceRapida < total - 1) {
             indiceRapida++;
             moverCarrusel("carrusel-rapida", indiceRapida);
         }
     };
+
     document.getElementById("prev-rapida").onclick = () => {
         if (indiceRapida > 0) {
             indiceRapida--;
@@ -131,6 +126,7 @@ function agregarAlCarrito(id) {
     if (!prod || prod.stock <= 0) return;
 
     prod.stock--;
+
     const item = carrito.find(c => c.id === id);
     if (item) item.cantidad++;
     else carrito.push({ ...prod, cantidad: 1 });
@@ -160,98 +156,77 @@ function actualizarTodo() {
 
 function actualizarCarrito() {
     productosDiv.innerHTML = "";
-    let total = 0, cant = 0;
+
+    let total = 0;
+    let cantidad = 0;
 
     carrito.forEach(i => {
         total += i.precio * i.cantidad;
-        cant += i.cantidad;
+        cantidad += i.cantidad;
+
         const p = document.createElement("p");
-        p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
+        p.innerHTML = `
+            ${i.nombre} x${i.cantidad}
+            <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>
+        `;
         productosDiv.appendChild(p);
     });
 
-    // ENVÍO SEGÚN ZONA
     let precioEnvio = 0;
-    const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-    if (opcionSeleccionada) {
-        precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
-    }
+    const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
+    if (opcion) precioEnvio = parseInt(opcion.dataset.precio) || 0;
 
     total += precioEnvio;
 
     totalSpan.innerText = total;
-    contador.innerText = cant;
-    contador.style.display = cant > 0 ? "block" : "none";
+    contador.innerText = cantidad;
+    contador.style.display = cantidad > 0 ? "block" : "none";
 }
 
-zonaEnvio.addEventListener("change", () => {
-    actualizarCarrito();
-});
+zonaEnvio.addEventListener("change", actualizarCarrito);
 
 /***********************
-  4. WHATSAPP + VALIDACIÓN DE PAGO
+  4. ENVÍO WHATSAPP
 ***********************/
-
 document.getElementById("formPedido").onsubmit = (e) => {
     e.preventDefault();
     if (carrito.length === 0) return;
 
     const nombre = document.getElementById("nombre").value;
     const ubicacion = ubicacionInput.value;
-
-    const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-    const zonaTexto = opcionSeleccionada.text;
-    const precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
-
     const metodo = metodoPago.value;
 
-    // 🔴 VALIDACIONES DE PAGO
     if (!metodo) {
-        alert("Por favor seleccioná un método de pago");
+        alert("Seleccioná método de pago");
         return;
     }
 
     if (metodo === "mercadopago" && !pagoRealizado.checked) {
-        alert("Debes realizar el pago y marcar la casilla antes de enviar el pedido");
+        alert("Confirmá el pago antes de enviar");
         return;
     }
 
-    let totalProductos = 0;
-    carrito.forEach(i => totalProductos += i.precio * i.cantidad);
-
-    const totalFinal = totalProductos + precioEnvio;
+    let total = 0;
+    carrito.forEach(i => total += i.precio * i.cantidad);
 
     let mensaje = `*Pedido de ${nombre}*%0A`;
     carrito.forEach(i => {
         mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
     });
 
-    mensaje += `%0A*Zona:* ${zonaTexto}`;
-    mensaje += `%0A*Envío:* $${precioEnvio}`;
-    mensaje += `%0A*Total productos:* $${totalProductos}`;
-    mensaje += `%0A*TOTAL FINAL:* $${totalFinal}`;
-
-    // 💳 INFORMACIÓN DE PAGO
-    if (metodo === "efectivo") {
-        mensaje += `%0A%0A💳 *Método de pago:* Efectivo`;
-    }
-
-    if (metodo === "mercadopago") {
-        mensaje += `%0A%0A💳 *Método de pago:* Mercado Pago`;
-        mensaje += `%0A📌 *Estado:* Pago informado por el cliente`;
-    }
+    mensaje += `%0A*Total:* $${total}`;
 
     if (ubicacion) {
-        mensaje += `%0A%0A📍 *Ubicación:* %0A${encodeURIComponent(ubicacion)}`;
+        mensaje += `%0A📍 ${encodeURIComponent(ubicacion)}`;
     }
 
     window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
 
-    pedidosPendientes.push({ 
-        id: Date.now(), 
-        nombre, 
-        items: [...carrito], 
-        total: totalFinal,
+    pedidosPendientes.push({
+        id: Date.now(),
+        nombre,
+        items: [...carrito],
+        total,
         metodoPago: metodo
     });
 
@@ -267,38 +242,49 @@ document.getElementById("formPedido").onsubmit = (e) => {
 ***********************/
 function renderPanelAdmin() {
     panelAdmin.innerHTML = "<h3>Pedidos Pendientes</h3>";
+
     pedidosPendientes.forEach(p => {
         const div = document.createElement("div");
-        div.innerHTML = `<p>${p.nombre} - $${p.total}</p>
+        div.innerHTML = `
+            <p>${p.nombre} - $${p.total}</p>
             <button onclick="confirmarPedido(${p.id})">✅</button>
-            <button onclick="cancelarPedido(${p.id})">❌</button>`;
+            <button onclick="cancelarPedido(${p.id})">❌</button>
+        `;
         panelAdmin.appendChild(div);
     });
+}
 
-
-pedidosPendientes.push(nuevoPedido);
-localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
-
+function confirmarPedido(id) {
+    pedidosPendientes = pedidosPendientes.filter(p => p.id !== id);
+    localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
+    renderPanelAdmin();
+}
 
 function cancelarPedido(id) {
     const pedido = pedidosPendientes.find(p => p.id === id);
-    if (pedido) pedido.items.forEach(i => { 
-        const pr = productos.find(x => x.id === i.id); 
-        if(pr) pr.stock += i.cantidad; 
-    });
+
+    if (pedido) {
+        pedido.items.forEach(i => {
+            const prod = productos.find(p => p.id === i.id);
+            if (prod) prod.stock += i.cantidad;
+        });
+    }
+
     confirmarPedido(id);
     actualizarTodo();
 }
 
 /***********************
-  6. UI + MODO OSCURO
+  6. UI
 ***********************/
-if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
+if (localStorage.getItem("modo") === "oscuro")
+    document.body.classList.add("oscuro");
 
 modoBtn.onclick = () => {
     document.body.classList.toggle("oscuro");
-    localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
-    modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
+    localStorage.setItem("modo",
+        document.body.classList.contains("oscuro") ? "oscuro" : "claro"
+    );
 };
 
 fondoColorInput.oninput = (e) => {
@@ -306,27 +292,17 @@ fondoColorInput.oninput = (e) => {
     localStorage.setItem("colorFondo", e.target.value);
 };
 
-if(localStorage.getItem("colorFondo")) {
-    document.body.style.backgroundColor = localStorage.getItem("colorFondo");
-}
-
 document.querySelector(".carrito-btn").onclick = () => {
     document.querySelector(".carrito-panel").classList.toggle("oculto");
 };
 
 setInterval(() => {
-    const r = document.getElementById("reloj");
-    if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
+    const reloj = document.getElementById("reloj");
+    if (reloj) reloj.innerText = new Date().toLocaleTimeString();
 }, 1000);
 
-document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.shiftKey && e.code === "KeyA") {
-        if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
-    }
-});
-
 /***********************
-  7. PAGO MERCADO PAGO UI
+  7. PAGO UI
 ***********************/
 metodoPago.addEventListener("change", () => {
     if (metodoPago.value === "mercadopago") {
@@ -344,35 +320,26 @@ btnPagarMP.onclick = () => {
 };
 
 /***********************
-  8. INICIO
-***********************/
-
-cargarProductos();
-
-/***********************
-  9. FONDO EMOJIS
+  8. FONDO EMOJIS
 ***********************/
 function crearFondoEmojis() {
     const contenedor = document.getElementById("fondo-emojis");
     if (!contenedor) return;
 
-    contenedor.innerHTML = "";
-    const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑", "🥩", "🍲", "🥘", "🥦", "🍝", "🍕", "🌯"];
+    const emojis = ["🍎","🥗","🍱","🍗","🥑","🥩","🍲","🥘","🥦","🍝","🍕","🌯"];
 
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 60; i++) {
         const span = document.createElement("span");
         span.classList.add("emoji-flotante");
-        span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-        span.style.left = `${Math.random() * 100}vw`;
-        span.style.top = `${Math.random() * 100}vh`;
-        span.style.transform = `rotate(${Math.random() * 360}deg)`;
+        span.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+        span.style.left = Math.random()*100 + "vw";
+        span.style.top = Math.random()*100 + "vh";
         contenedor.appendChild(span);
     }
 }
 
-
+/***********************
+  9. INICIO
+***********************/
+cargarProductos();
 crearFondoEmojis();
-
-
-
-
