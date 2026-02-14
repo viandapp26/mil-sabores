@@ -269,3 +269,39 @@ crearFondoEmojis();
 iniciarReloj();
 actualizarTodo();
 
+
+const modoOscuroBtn = document.getElementById("modoOscuroBtn");
+
+modoOscuroBtn.addEventListener("click", () => {
+    document.body.classList.toggle("modo-oscuro");
+
+    if (document.body.classList.contains("modo-oscuro")) {
+        localStorage.setItem("modoOscuro", "activo");
+    } else {
+        localStorage.removeItem("modoOscuro");
+    }
+});
+
+/* Cargar preferencia guardada */
+if (localStorage.getItem("modoOscuro") === "activo") {
+    document.body.classList.add("modo-oscuro");
+}
+
+
+
+const fondoColor = document.getElementById("fondoColor");
+
+/* Cambiar color en tiempo real */
+fondoColor.addEventListener("input", (e) => {
+    document.body.style.backgroundColor = e.target.value;
+    localStorage.setItem("colorFondo", e.target.value);
+});
+
+/* Cargar color guardado */
+const colorGuardado = localStorage.getItem("colorFondo");
+if (colorGuardado) {
+    document.body.style.backgroundColor = colorGuardado;
+    fondoColor.value = colorGuardado;
+}
+
+
