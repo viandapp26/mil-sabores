@@ -101,23 +101,69 @@ function iniciarReloj() {
 /* CARRUSEL */
 /* ========================= */
 
-const carruselTrack = document.querySelector(".carrusel-track");
-const slides = document.querySelectorAll(".slide");
+function renderSeccion(categoria, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    if (!contenedor) return;
+    
+    contenedor.innerHTML = "";
+    const filtrados = productos.filter(p => p.categoria === categoria);
 
-if (carruselTrack && slides.length > 0) {
-    let index = 0;
+    filtrados.forEach(prod => {
+        const div = document.createElement("div");
+        div.classList.add("producto");
+        div.innerHTML = `
+            <img src="${prod.imagen}" onerror="this.src='https://via.placeholder.com/150'">
+            <h3>${prod.nombre}</h3>
+            <p>$${prod.precio}</p>
+            <p class="stock">Stock: ${prod.stock}</p>
+            <button onclick="agregarAlCarrito(${prod.id})" ${prod.stock <= 0 ? "disabled" : ""}>
+                ${prod.stock <= 0 ? "Sin stock" : "Agregar"}
+            </button>
+        `;
+        contenedor.appendChild(div);
+    });
+}
 
-    function moverCarrusel() {
-        index++;
-        if (index >= slides.length) {
-            index = 0;
+function moverCarrusel(idContenedor, indice) {
+    const carrusel = document.getElementById(idContenedor);
+    const tarjeta = carrusel.querySelector(".producto");
+    if (!tarjeta) return;
+    
+    const estilo = window.getComputedStyle(tarjeta);
+    const margenDerecho = parseFloat(estilo.marginRight) || 20;
+    const anchoTotal = tarjeta.offsetWidth + margenDerecho;
+
+    carrusel.style.transform = `translateX(-${indice * anchoTotal}px)`;
+}
+
+function setupFlechas() {
+    document.getElementById("next-viandas").onclick = () => {
+        const filtrados = productos.filter(p => p.categoria === "vianda");
+        if (indiceViandas < filtrados.length - 1) {
+            indiceViandas++;
+            moverCarrusel("carrusel-viandas", indiceViandas);
         }
+    };
+    document.getElementById("prev-viandas").onclick = () => {
+        if (indiceViandas > 0) {
+            indiceViandas--;
+            moverCarrusel("carrusel-viandas", indiceViandas);
+        }
+    };
 
-        carruselTrack.style.transform =
-            `translateX(-${index * 100}%)`;
-    }
-
-    setInterval(moverCarrusel, 3000);
+    document.getElementById("next-rapida").onclick = () => {
+        const filtrados = productos.filter(p => p.categoria === "rapida");
+        if (indiceRapida < filtrados.length - 1) {
+            indiceRapida++;
+            moverCarrusel("carrusel-rapida", indiceRapida);
+        }
+    };
+    document.getElementById("prev-rapida").onclick = () => {
+        if (indiceRapida > 0) {
+            indiceRapida--;
+            moverCarrusel("carrusel-rapida", indiceRapida);
+        }
+    };
 }
 
 
@@ -376,6 +422,7 @@ iniciarReloj();
 actualizarTodo();
 
 });
+
 
 
 
