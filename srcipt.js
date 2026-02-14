@@ -276,11 +276,17 @@ function renderPanelAdmin() {
     });
 }
 
-function confirmarPedido(id) {
-    pedidosPendientes = pedidosPendientes.filter(p => p.id !== id);
-    localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
-    renderPanelAdmin();
-}
+const nuevoPedido = { 
+    id: Date.now(), 
+    nombre, 
+    items: JSON.parse(JSON.stringify(carrito)), 
+    total: totalFinal,
+    metodoPago: metodo
+};
+
+pedidosPendientes.push(nuevoPedido);
+localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
+
 
 function cancelarPedido(id) {
     const pedido = pedidosPendientes.find(p => p.id === id);
@@ -374,5 +380,6 @@ function crearFondoEmojis() {
 
 
 crearFondoEmojis();
+
 
 
