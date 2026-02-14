@@ -412,15 +412,6 @@ function crearFondoEmojis() {
 }
 
 
-/* ========================= */
-/* INICIAR TODO */
-/* ========================= */
-
-cargarProductos();
-crearFondoEmojis();
-iniciarReloj();
-actualizarTodo();
-
 
 
 
