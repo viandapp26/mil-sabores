@@ -376,11 +376,9 @@ crearFondoEmojis();
 
 
 /************************************************
-        BLOQUE EXTRA – CONTROL DE HORARIOS
-        (No modifica tu código anterior)
+        CONTROL DE HORARIOS (VERSIÓN SEGURA)
 ************************************************/
 
-/* --- Función que valida si una categoría está activa --- */
 function horarioActivo(categoria) {
     const hora = new Date().getHours();
 
@@ -395,54 +393,32 @@ function horarioActivo(categoria) {
     return true;
 }
 
-/* --- Actualiza visualmente las secciones --- */
-function actualizarEstadoSecciones() {
+/* --- Envuelve tu función original SIN romper nada --- */
 
-    const viandas = document.getElementById("carrusel-viandas")?.parentElement;
-    const rapida = document.getElementById("carrusel-rapida")?.parentElement;
+if (typeof agregarAlCarrito === "function") {
 
-    const hora = new Date().getHours();
+    const agregarOriginal = agregarAlCarrito;
 
-    if (viandas) {
-        const activa = hora >= 7 && hora < 11;
-        viandas.classList.toggle("seccion-cerrada", !activa);
-    }
+    agregarAlCarrito = function(id) {
 
-    if (rapida) {
-        const activa = hora >= 19 && hora < 22;
-        rapida.classList.toggle("seccion-cerrada", !activa);
-    }
+        const prod = productos.find(p => p.id === id);
+        if (!prod) return;
+
+        if (!horarioActivo(prod.categoria)) {
+            alert("Esta sección está fuera de horario.");
+            return;
+        }
+
+        agregarOriginal(id);
+    };
 }
 
-/* --- Intercepta clicks en botones Agregar --- */
-document.addEventListener("click", function(e) {
-
-    const boton = e.target.closest("button");
-    if (!boton) return;
-
-    const onclickAttr = boton.getAttribute("onclick");
-
-    if (onclickAttr && onclickAttr.includes("agregarAlCarrito")) {
-
-        const idMatch = onclickAttr.match(/\d+/);
-        if (!idMatch) return;
-
-        const id = parseInt(idMatch[0]);
-        const prod = productos.find(p => p.id === id);
-
-        if (prod && !horarioActivo(prod.categoria)) {
-            alert("Esta sección está fuera de horario.");
-            e.stopImmediatePropagation();
-            e.preventDefault();
-        }
-    }
-});
-
 /* --- Bloqueo al enviar pedido --- */
-const formExtraHorario = document.getElementById("formPedido");
 
-if (formExtraHorario) {
-    formExtraHorario.addEventListener("submit", function(e) {
+const formHorario = document.getElementById("formPedido");
+
+if (formHorario) {
+    formHorario.addEventListener("submit", function(e) {
 
         if (typeof carrito === "undefined") return;
 
@@ -455,6 +431,23 @@ if (formExtraHorario) {
     });
 }
 
-/* --- Iniciar control visual automático --- */
+/* --- Control visual --- */
+
+function actualizarEstadoSecciones() {
+
+    const viandas = document.getElementById("carrusel-viandas")?.parentElement;
+    const rapida = document.getElementById("carrusel-rapida")?.parentElement;
+
+    const hora = new Date().getHours();
+
+    if (viandas) {
+        viandas.classList.toggle("seccion-cerrada", !(hora >= 7 && hora < 11));
+    }
+
+    if (rapida) {
+        rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 22));
+    }
+}
+
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
