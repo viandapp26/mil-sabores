@@ -1,106 +1,63 @@
-document.addEventListener("DOMContentLoaded", function () {
-
-/* ========================= */
-/* VARIABLES GLOBALES */
-/* ========================= */
-
+/***********************
+  VARIABLES GLOBALES
+***********************/
 let productos = [];
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-let stockGuardado = JSON.parse(localStorage.getItem("stockProductos"));
+let pedidosPendientes = JSON.parse(localStorage.getItem("pedidosPendientes")) || [];
 
-const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
-
-/* ========================= */
-/* ELEMENTOS */
-/* ========================= */
+let indiceViandas = 0;
+let indiceRapida = 0;
 
 const totalSpan = document.getElementById("total-precio");
 const contador = document.querySelector(".carrito-contador");
 const productosDiv = document.querySelector(".carrito-productos");
+
 const zonaEnvio = document.getElementById("zonaEnvio");
 const ubicacionInput = document.getElementById("ubicacion");
+
+const panelAdmin = document.getElementById("panel-admin");
+const modoBtn = document.getElementById("modoOscuroBtn");
+const fondoColorInput = document.getElementById("fondoColor");
+
+// Pago
 const metodoPago = document.getElementById("metodoPago");
 const btnPagarMP = document.getElementById("btnPagarMP");
 const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
-const carritoBtn = document.querySelector(".carrito-btn");
-const carritoPanel = document.querySelector(".carrito-panel");
-const modoOscuroBtn = document.getElementById("modoOscuroBtn");
-const fondoColor = document.getElementById("fondoColor");
-const reloj = document.getElementById("reloj");
 
+// 🔗 TU LINK DE MERCADO PAGO (CAMBIAR POR EL TUYO)
+const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
-/* ========================= */
-/* ABRIR / CERRAR CARRITO */
-/* ========================= */
+// Habilitar zona y ubicación
+zonaEnvio.disabled = false;
+ubc = ubicacionInput;
+ubicacionInput.disabled = false;
 
-if (carritoBtn && carritoPanel) {
-    carritoBtn.addEventListener("click", () => {
-        carritoPanel.classList.toggle("oculto");
-    });
-}
+/***********************
+  1. CARGA DE DATOS
+***********************/
+async function cargarProductos() {
+    try {
+        const res = await fetch("productos.json");
+        const data = await res.json();
+        const stockLocal = JSON.parse(localStorage.getItem("stockProductos")) || [];
 
+        productos = data.map(pj => {
+            const guardado = stockLocal.find(s => s.id === pj.id);
+            return { ...pj, stock: guardado ? guardado.stock : pj.stock };
+        });
 
-/* ========================= */
-/* MODO OSCURO */
-/* ========================= */
-
-if (modoOscuroBtn) {
-    modoOscuroBtn.addEventListener("click", () => {
-        document.body.classList.toggle("modo-oscuro");
-
-        localStorage.setItem(
-            "modoOscuro",
-            document.body.classList.contains("modo-oscuro")
-        );
-    });
-}
-
-if (localStorage.getItem("modoOscuro") === "true") {
-    document.body.classList.add("modo-oscuro");
-}
-
-
-/* ========================= */
-/* CAMBIO COLOR FONDO */
-/* ========================= */
-
-if (fondoColor) {
-    fondoColor.addEventListener("input", (e) => {
-        document.body.style.backgroundColor = e.target.value;
-        localStorage.setItem("colorFondo", e.target.value);
-    });
-
-    const colorGuardado = localStorage.getItem("colorFondo");
-    if (colorGuardado) {
-        document.body.style.backgroundColor = colorGuardado;
-        fondoColor.value = colorGuardado;
+        actualizarTodo(); 
+        renderPanelAdmin();
+        setupFlechas(); 
+    } catch (e) {
+        console.error("Error cargando productos:", e);
     }
 }
 
-
-/* ========================= */
-/* RELOJ */
-/* ========================= */
-
-function iniciarReloj() {
-    if (!reloj) return;
-
-    setInterval(() => {
-        const ahora = new Date();
-        const horas = String(ahora.getHours()).padStart(2, "0");
-        const minutos = String(ahora.getMinutes()).padStart(2, "0");
-        const segundos = String(ahora.getSeconds()).padStart(2, "0");
-
-        reloj.textContent = `${horas}:${minutos}:${segundos}`;
-    }, 1000);
-}
-
-
-/* ========================= */
-/* CARRUSEL */
-/* ========================= */
-
+/***********************
+  2. RENDER Y CARRUSELES
+***********************/
 function renderSeccion(categoria, idContenedor) {
     const contenedor = document.getElementById(idContenedor);
     if (!contenedor) return;
@@ -166,252 +123,256 @@ function setupFlechas() {
     };
 }
 
-
-/* ========================= */
-/* CARGAR PRODUCTOS */
-/* ========================= */
-
-async function cargarProductos() {
-    try {
-        const res = await fetch("productos.json");
-        const data = await res.json();
-
-        if (stockGuardado) {
-            productos = stockGuardado;
-        } else {
-            productos = data;
-            localStorage.setItem("stockProductos", JSON.stringify(productos));
-        }
-
-        actualizarTodo();
-    } catch (error) {
-        console.error("Error cargando productos:", error);
-    }
-}
-
-
-/* ========================= */
-/* RENDER SECCIÓN */
-/* ========================= */
-
-function renderSeccion(categoria, id) {
-    const cont = document.getElementById(id);
-    if (!cont) return;
-
-    cont.innerHTML = "";
-
-    productos
-        .filter(p => p.categoria === categoria)
-        .forEach(prod => {
-
-            const div = document.createElement("div");
-            div.classList.add("producto");
-
-            div.innerHTML = `
-                <img src="${prod.imagen}" alt="${prod.nombre}">
-                <h3>${prod.nombre}</h3>
-                <p>$${prod.precio}</p>
-                <p>Stock: ${prod.stock}</p>
-                <button ${prod.stock <= 0 ? "disabled" : ""}>
-                    ${prod.stock <= 0 ? "Sin stock" : "Agregar"}
-                </button>
-            `;
-
-            div.querySelector("button")
-                .addEventListener("click", () => agregarAlCarrito(prod.id));
-
-            cont.appendChild(div);
-        });
-}
-
-
-/* ========================= */
-/* AGREGAR AL CARRITO */
-/* ========================= */
-
+/***********************
+  3. CARRITO
+***********************/
 function agregarAlCarrito(id) {
     const prod = productos.find(p => p.id === id);
     if (!prod || prod.stock <= 0) return;
 
     prod.stock--;
-    localStorage.setItem("stockProductos", JSON.stringify(productos));
-
     const item = carrito.find(c => c.id === id);
-
     if (item) item.cantidad++;
     else carrito.push({ ...prod, cantidad: 1 });
 
     actualizarTodo();
 }
 
+function eliminarDelCarrito(id) {
+    const idx = carrito.findIndex(c => c.id === id);
+    if (idx === -1) return;
 
-/* ========================= */
-/* ACTUALIZAR TODO */
-/* ========================= */
+    const prod = productos.find(p => p.id === id);
+    if (prod) prod.stock += carrito[idx].cantidad;
+
+    carrito.splice(idx, 1);
+    actualizarTodo();
+}
 
 function actualizarTodo() {
+    localStorage.setItem("stockProductos", JSON.stringify(productos));
     localStorage.setItem("carrito", JSON.stringify(carrito));
+
     renderSeccion("vianda", "carrusel-viandas");
     renderSeccion("rapida", "carrusel-rapida");
     actualizarCarrito();
 }
 
-
-/* ========================= */
-/* ACTUALIZAR CARRITO */
-/* ========================= */
-
 function actualizarCarrito() {
-
-    if (!productosDiv) return;
-
     productosDiv.innerHTML = "";
-
-    let total = 0;
-    let cantidad = 0;
+    let total = 0, cant = 0;
 
     carrito.forEach(i => {
-
         total += i.precio * i.cantidad;
-        cantidad += i.cantidad;
+        cant += i.cantidad;
+        const p = document.createElement("p");
+        p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
+        productosDiv.appendChild(p);
+    });
 
+    // ENVÍO SEGÚN ZONA
+    let precioEnvio = 0;
+    const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
+    if (opcionSeleccionada) {
+        precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
+    }
+
+    total += precioEnvio;
+
+    totalSpan.innerText = total;
+    contador.innerText = cant;
+    contador.style.display = cant > 0 ? "block" : "none";
+}
+
+zonaEnvio.addEventListener("change", () => {
+    actualizarCarrito();
+});
+
+/***********************
+  4. WHATSAPP + VALIDACIÓN DE PAGO
+***********************/
+
+document.getElementById("formPedido").onsubmit = (e) => {
+    e.preventDefault();
+    if (carrito.length === 0) return;
+
+    const nombre = document.getElementById("nombre").value;
+    const ubicacion = ubicacionInput.value;
+
+    const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
+    const zonaTexto = opcionSeleccionada.text;
+    const precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
+
+    const metodo = metodoPago.value;
+
+    // 🔴 VALIDACIONES DE PAGO
+    if (!metodo) {
+        alert("Por favor seleccioná un método de pago");
+        return;
+    }
+
+    if (metodo === "mercadopago" && !pagoRealizado.checked) {
+        alert("Debes realizar el pago y marcar la casilla antes de enviar el pedido");
+        return;
+    }
+
+    let totalProductos = 0;
+    carrito.forEach(i => totalProductos += i.precio * i.cantidad);
+
+    const totalFinal = totalProductos + precioEnvio;
+
+    let mensaje = `*Pedido de ${nombre}*%0A`;
+    carrito.forEach(i => {
+        mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
+    });
+
+    mensaje += `%0A*Zona:* ${zonaTexto}`;
+    mensaje += `%0A*Envío:* $${precioEnvio}`;
+    mensaje += `%0A*Total productos:* $${totalProductos}`;
+    mensaje += `%0A*TOTAL FINAL:* $${totalFinal}`;
+
+    // 💳 INFORMACIÓN DE PAGO
+    if (metodo === "efectivo") {
+        mensaje += `%0A%0A *Método de pago:* Efectivo`;
+    }
+
+    if (metodo === "mercadopago") {
+        mensaje += `%0A%0A *Método de pago:* Mercado Pago`;
+        mensaje += `%0A *Estado:* Pago informado por el cliente`;
+    }
+
+    if (ubicacion) {
+        mensaje += `%0A%0A *Ubicación:* %0A${encodeURIComponent(ubicacion)}`;
+    }
+
+    window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
+
+    pedidosPendientes.push({ 
+        id: Date.now(), 
+        nombre, 
+        items: [...carrito], 
+        total: totalFinal,
+        metodoPago: metodo
+    });
+
+    localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
+
+    carrito = [];
+    actualizarTodo();
+    renderPanelAdmin();
+};
+
+/***********************
+  5. PANEL ADMIN
+***********************/
+function renderPanelAdmin() {
+    panelAdmin.innerHTML = "<h3>Pedidos Pendientes</h3>";
+    pedidosPendientes.forEach(p => {
         const div = document.createElement("div");
-        div.style.display = "flex";
-        div.style.justifyContent = "space-between";
-        div.style.padding = "5px 0";
-
-        div.innerHTML = `
-            <span>${i.nombre}</span>
-            <span>x${i.cantidad}</span>
-        `;
-
-        productosDiv.appendChild(div);
+        div.innerHTML = `<p>${p.nombre} - $${p.total}</p>
+            <button onclick="confirmarPedido(${p.id})">✅</button>
+            <button onclick="cancelarPedido(${p.id})">❌</button>`;
+        panelAdmin.appendChild(div);
     });
+}
 
-    const opcion = zonaEnvio?.options[zonaEnvio.selectedIndex];
-    const envio = parseInt(opcion?.dataset.precio) || 0;
+function confirmarPedido(id) {
+    pedidosPendientes = pedidosPendientes.filter(p => p.id !== id);
+    localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
+    renderPanelAdmin();
+}
 
-    total += envio;
+function cancelarPedido(id) {
+    const pedido = pedidosPendientes.find(p => p.id === id);
+    if (pedido) pedido.items.forEach(i => { 
+        const pr = productos.find(x => x.id === i.id); 
+        if(pr) pr.stock += i.cantidad; 
+    });
+    confirmarPedido(id);
+    actualizarTodo();
+}
 
-    if (totalSpan) totalSpan.innerText = total;
-    if (contador) {
-        contador.innerText = cantidad;
-        contador.style.display = cantidad > 0 ? "inline-block" : "none";
+/***********************
+  6. UI + MODO OSCURO
+***********************/
+if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
+
+modoBtn.onclick = () => {
+    document.body.classList.toggle("oscuro");
+    localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
+    modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
+};
+
+fondoColorInput.oninput = (e) => {
+    document.body.style.backgroundColor = e.target.value;
+    localStorage.setItem("colorFondo", e.target.value);
+};
+
+if(localStorage.getItem("colorFondo")) {
+    document.body.style.backgroundColor = localStorage.getItem("colorFondo");
+}
+
+document.querySelector(".carrito-btn").onclick = () => {
+    document.querySelector(".carrito-panel").classList.toggle("oculto");
+};
+
+setInterval(() => {
+    const r = document.getElementById("reloj");
+    if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
+}, 1000);
+
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === "KeyA") {
+        if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
     }
-}
+});
 
+/***********************
+  7. PAGO MERCADO PAGO UI
+***********************/
+metodoPago.addEventListener("change", () => {
+    if (metodoPago.value === "mercadopago") {
+        btnPagarMP.style.display = "block";
+        confirmacionPago.style.display = "block";
+    } else {
+        btnPagarMP.style.display = "none";
+        confirmacionPago.style.display = "none";
+        pagoRealizado.checked = false;
+    }
+});
 
-/* ========================= */
-/* ZONA ENVÍO */
-/* ========================= */
+btnPagarMP.onclick = () => {
+    window.open(linkMercadoPago, "_blank");
+};
 
-if (zonaEnvio) {
-    zonaEnvio.addEventListener("change", actualizarCarrito);
-}
+/***********************
+  8. INICIO
+***********************/
 
+cargarProductos();
 
-/* ========================= */
-/* FORMULARIO */
-/* ========================= */
-
-const formPedido = document.getElementById("formPedido");
-
-if (formPedido) {
-
-    formPedido.addEventListener("submit", (e) => {
-
-        e.preventDefault();
-        if (carrito.length === 0) return;
-
-        const nombre = document.getElementById("nombre").value;
-        const ubicacion = ubicacionInput?.value;
-        const metodo = metodoPago?.value;
-
-        if (metodo === "mercadopago" && !pagoRealizado.checked) {
-            alert("Confirmá el pago antes de continuar");
-            return;
-        }
-
-        let total = 0;
-        let mensaje = `*Pedido de ${nombre}*%0A`;
-
-        carrito.forEach(i => {
-            total += i.precio * i.cantidad;
-            mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
-        });
-
-        const opcion = zonaEnvio?.options[zonaEnvio.selectedIndex];
-        const envio = parseInt(opcion?.dataset.precio) || 0;
-
-        total += envio;
-        mensaje += `%0A*Total:* $${total}`;
-
-        if (ubicacion) {
-            mensaje += `%0A📍 ${encodeURIComponent(ubicacion)}`;
-        }
-
-        window.open(
-            `https://wa.me/5493764726863?text=${mensaje}`,
-            "_blank"
-        );
-
-        carrito = [];
-        localStorage.setItem("carrito", JSON.stringify(carrito));
-        carritoPanel?.classList.add("oculto");
-
-        actualizarTodo();
-    });
-}
-
-
-/* ========================= */
-/* MERCADO PAGO */
-/* ========================= */
-
-if (metodoPago) {
-
-    metodoPago.addEventListener("change", () => {
-
-        if (metodoPago.value === "mercadopago") {
-            btnPagarMP.style.display = "block";
-            confirmacionPago.style.display = "block";
-        } else {
-            btnPagarMP.style.display = "none";
-            confirmacionPago.style.display = "none";
-            pagoRealizado.checked = false;
-        }
-
-    });
-}
-
-if (btnPagarMP) {
-    btnPagarMP.addEventListener("click", () => {
-        window.open(linkMercadoPago, "_blank");
-    });
-}
-
-
-/* ========================= */
-/* EMOJIS */
-/* ========================= */
-
+/***********************
+  9. FONDO EMOJIS
+***********************/
 function crearFondoEmojis() {
-    const cont = document.getElementById("fondo-emojis");
-    if (!cont) return;
+    const contenedor = document.getElementById("fondo-emojis");
+    if (!contenedor) return;
 
-    const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑"];
+    contenedor.innerHTML = "";
+    const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑", "🥩", "🍲", "🥘", "🥦", "🍝", "🍕", "🌯"];
 
-    for (let i = 0; i < 40; i++) {
-        const s = document.createElement("span");
-        s.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-        s.style.position = "absolute";
-        s.style.left = Math.random() * 100 + "vw";
-        s.style.top = Math.random() * 100 + "vh";
-        cont.appendChild(s);
+    for (let i = 0; i < 80; i++) {
+        const span = document.createElement("span");
+        span.classList.add("emoji-flotante");
+        span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        span.style.left = `${Math.random() * 100}vw`;
+        span.style.top = `${Math.random() * 100}vh`;
+        span.style.transform = `rotate(${Math.random() * 360}deg)`;
+        contenedor.appendChild(span);
     }
 }
 
-
+crearFondoEmojis();
 
 
 
