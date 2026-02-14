@@ -421,7 +421,6 @@ crearFondoEmojis();
 iniciarReloj();
 actualizarTodo();
 
-});
 
 
 
