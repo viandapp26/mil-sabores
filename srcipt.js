@@ -1,6 +1,8 @@
 let productos = [];
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-let pedidosPendientes = JSON.parse(localStorage.getItem("pedidosPendientes")) || [];
+
+/* STOCK PERSISTENTE */
+let stockGuardado = JSON.parse(localStorage.getItem("stockProductos"));
 
 /* ELEMENTOS */
 const totalSpan = document.getElementById("total-precio");
@@ -14,26 +16,72 @@ const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
 const carritoBtn = document.querySelector(".carrito-btn");
 const carritoPanel = document.querySelector(".carrito-panel");
+const modoOscuroBtn = document.getElementById("modoOscuroBtn");
 
 const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
+/* ========================= */
 /* ABRIR / CERRAR CARRITO */
+/* ========================= */
 carritoBtn.addEventListener("click", () => {
     carritoPanel.classList.toggle("oculto");
 });
 
+/* ========================= */
+/* MODO OSCURO */
+/* ========================= */
+modoOscuroBtn.addEventListener("click", () => {
+    document.body.classList.toggle("modo-oscuro");
+    localStorage.setItem(
+        "modoOscuro",
+        document.body.classList.contains("modo-oscuro")
+    );
+});
+
+if (localStorage.getItem("modoOscuro") === "true") {
+    document.body.classList.add("modo-oscuro");
+}
+
+/* ========================= */
+/* RELOJ FUNCIONANDO */
+/* ========================= */
+function iniciarReloj() {
+    const reloj = document.getElementById("reloj");
+
+    setInterval(() => {
+        const ahora = new Date();
+        const horas = String(ahora.getHours()).padStart(2, "0");
+        const minutos = String(ahora.getMinutes()).padStart(2, "0");
+        const segundos = String(ahora.getSeconds()).padStart(2, "0");
+
+        reloj.textContent = `${horas}:${minutos}:${segundos}`;
+    }, 1000);
+}
+
+/* ========================= */
 /* CARGAR PRODUCTOS */
+/* ========================= */
 async function cargarProductos() {
     try {
         const res = await fetch("productos.json");
-        productos = await res.json();
+        const data = await res.json();
+
+        if (stockGuardado) {
+            productos = stockGuardado;
+        } else {
+            productos = data;
+            localStorage.setItem("stockProductos", JSON.stringify(productos));
+        }
+
         actualizarTodo();
     } catch (error) {
         console.error("Error cargando productos:", error);
     }
 }
 
-/* RENDER PRODUCTOS */
+/* ========================= */
+/* RENDER SECCIÓN */
+/* ========================= */
 function renderSeccion(categoria, id) {
     const cont = document.getElementById(id);
     cont.innerHTML = "";
@@ -61,12 +109,16 @@ function renderSeccion(categoria, id) {
         });
 }
 
+/* ========================= */
 /* AGREGAR AL CARRITO */
+/* ========================= */
 function agregarAlCarrito(id) {
     const prod = productos.find(p => p.id === id);
     if (!prod || prod.stock <= 0) return;
 
     prod.stock--;
+
+    localStorage.setItem("stockProductos", JSON.stringify(productos));
 
     const item = carrito.find(c => c.id === id);
     if (item) item.cantidad++;
@@ -75,15 +127,21 @@ function agregarAlCarrito(id) {
     actualizarTodo();
 }
 
+/* ========================= */
 /* ACTUALIZAR TODO */
+/* ========================= */
 function actualizarTodo() {
     localStorage.setItem("carrito", JSON.stringify(carrito));
+
     renderSeccion("vianda", "carrusel-viandas");
     renderSeccion("rapida", "carrusel-rapida");
+
     actualizarCarrito();
 }
 
+/* ========================= */
 /* ACTUALIZAR CARRITO */
+/* ========================= */
 function actualizarCarrito() {
     productosDiv.innerHTML = "";
     let total = 0;
@@ -93,20 +151,25 @@ function actualizarCarrito() {
         total += i.precio * i.cantidad;
         cantidad += i.cantidad;
 
-        const p = document.createElement("p");
-        p.innerHTML = `${i.nombre} x${i.cantidad}`;
-        productosDiv.appendChild(p);
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.padding = "5px 0";
+
+        div.innerHTML = `
+            <span>${i.nombre}</span>
+            <span>x${i.cantidad}</span>
+        `;
+
+        productosDiv.appendChild(div);
     });
 
-    /* HABILITAR ENVÍO SOLO SI HAY PRODUCTOS */
-    zonaEnvio.disabled = carrito.length === 0;
-    ubicacionInput.disabled = carrito.length === 0;
+    /* FORMULARIO SIEMPRE HABILITADO */
+    zonaEnvio.disabled = false;
+    ubicacionInput.disabled = false;
 
-    let envio = 0;
-    if (zonaEnvio && !zonaEnvio.disabled) {
-        const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
-        envio = parseInt(opcion?.dataset.precio) || 0;
-    }
+    const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
+    const envio = parseInt(opcion?.dataset.precio) || 0;
 
     total += envio;
 
@@ -115,12 +178,14 @@ function actualizarCarrito() {
     contador.style.display = cantidad > 0 ? "inline-block" : "none";
 }
 
+/* ========================= */
 /* CAMBIO ZONA */
-if (zonaEnvio) {
-    zonaEnvio.addEventListener("change", actualizarCarrito);
-}
+/* ========================= */
+zonaEnvio.addEventListener("change", actualizarCarrito);
 
+/* ========================= */
 /* FORMULARIO */
+/* ========================= */
 document.getElementById("formPedido").addEventListener("submit", (e) => {
     e.preventDefault();
     if (carrito.length === 0) return;
@@ -155,10 +220,15 @@ document.getElementById("formPedido").addEventListener("submit", (e) => {
     window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
 
     carrito = [];
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+
+    carritoPanel.classList.add("oculto");
     actualizarTodo();
 });
 
-/* MERCADO PAGO UI */
+/* ========================= */
+/* MERCADO PAGO */
+/* ========================= */
 metodoPago.addEventListener("change", () => {
     if (metodoPago.value === "mercadopago") {
         btnPagarMP.style.display = "block";
@@ -174,22 +244,28 @@ btnPagarMP.addEventListener("click", () => {
     window.open(linkMercadoPago, "_blank");
 });
 
+/* ========================= */
 /* EMOJIS */
+/* ========================= */
 function crearFondoEmojis() {
     const cont = document.getElementById("fondo-emojis");
     const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑"];
 
     for (let i = 0; i < 40; i++) {
         const s = document.createElement("span");
-        s.classList.add("emoji-flotante");
         s.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        s.style.position = "absolute";
         s.style.left = Math.random() * 100 + "vw";
         s.style.top = Math.random() * 100 + "vh";
         cont.appendChild(s);
     }
 }
 
-/* INICIAR */
+/* ========================= */
+/* INICIAR TODO */
+/* ========================= */
 cargarProductos();
 crearFondoEmojis();
+iniciarReloj();
 actualizarTodo();
+
