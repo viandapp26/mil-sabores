@@ -274,15 +274,7 @@ function renderPanelAdmin() {
             <button onclick="cancelarPedido(${p.id})">❌</button>`;
         panelAdmin.appendChild(div);
     });
-}
 
-const nuevoPedido = { 
-    id: Date.now(), 
-    nombre, 
-    items: JSON.parse(JSON.stringify(carrito)), 
-    total: totalFinal,
-    metodoPago: metodo
-};
 
 pedidosPendientes.push(nuevoPedido);
 localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
@@ -380,6 +372,7 @@ function crearFondoEmojis() {
 
 
 crearFondoEmojis();
+
 
 
 
