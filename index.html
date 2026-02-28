@@ -61,13 +61,13 @@
       required
     >
 
-    <input
-      type="url"
-      id="ubicacion"
-      placeholder="Link de Google Maps"
-      disabled
-    >
-
+   <div class="grupo-ubicacion">
+    <button type="button" id="btn-cargar-gps" class="btn-gps">
+        📍 Cargar mi ubicación actual
+    </button>
+    <span id="gps-status"></span>
+</div>
+      
 <select id="zonaEnvio" disabled>
           <option value="0" data-precio="0">Seleccione su barrio/zona para envíos</option>
           <option value="centro" data-precio="500">Zona 1 - $500</option>
@@ -137,6 +137,7 @@
 <script src="srcipt.js"></script>
 </body>
 </html>
+
 
 
 
