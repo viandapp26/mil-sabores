@@ -25,13 +25,12 @@ const btnPagarMP = document.getElementById("btnPagarMP");
 const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
 
-// 🔗 TU LINK DE MERCADO PAGO (CAMBIAR POR EL TUYO)
+// 🔗 TU LINK DE MERCADO PAGO
 const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
-// Habilitar zona y ubicación
-zonaEnvio.disabled = false;
-ubc = ubicacionInput;
-ubicacionInput.disabled = false;
+// Configuración inicial de inputs
+if (zonaEnvio) zonaEnvio.disabled = false;
+if (ubicacionInput) ubicacionInput.disabled = false;
 
 /***********************
   1. CARGA DE DATOS
@@ -94,28 +93,33 @@ function moverCarrusel(idContenedor, indice) {
 }
 
 function setupFlechas() {
-    document.getElementById("next-viandas").onclick = () => {
+    const btnNextV = document.getElementById("next-viandas");
+    const btnPrevV = document.getElementById("prev-viandas");
+    const btnNextR = document.getElementById("next-rapida");
+    const btnPrevR = document.getElementById("prev-rapida");
+
+    if(btnNextV) btnNextV.onclick = () => {
         const filtrados = productos.filter(p => p.categoria === "vianda");
         if (indiceViandas < filtrados.length - 1) {
             indiceViandas++;
             moverCarrusel("carrusel-viandas", indiceViandas);
         }
     };
-    document.getElementById("prev-viandas").onclick = () => {
+    if(btnPrevV) btnPrevV.onclick = () => {
         if (indiceViandas > 0) {
             indiceViandas--;
             moverCarrusel("carrusel-viandas", indiceViandas);
         }
     };
 
-    document.getElementById("next-rapida").onclick = () => {
+    if(btnNextR) btnNextR.onclick = () => {
         const filtrados = productos.filter(p => p.categoria === "rapida");
         if (indiceRapida < filtrados.length - 1) {
             indiceRapida++;
             moverCarrusel("carrusel-rapida", indiceRapida);
         }
     };
-    document.getElementById("prev-rapida").onclick = () => {
+    if(btnPrevR) btnPrevR.onclick = () => {
         if (indiceRapida > 0) {
             indiceRapida--;
             moverCarrusel("carrusel-rapida", indiceRapida);
@@ -159,6 +163,7 @@ function actualizarTodo() {
 }
 
 function actualizarCarrito() {
+    if(!productosDiv) return;
     productosDiv.innerHTML = "";
     let total = 0, cant = 0;
 
@@ -170,102 +175,104 @@ function actualizarCarrito() {
         productosDiv.appendChild(p);
     });
 
-    // ENVÍO SEGÚN ZONA
     let precioEnvio = 0;
-    const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-    if (opcionSeleccionada) {
-        precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
+    if (zonaEnvio) {
+        const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
+        if (opcionSeleccionada) {
+            precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
+        }
     }
 
     total += precioEnvio;
 
-    totalSpan.innerText = total;
-    contador.innerText = cant;
-    contador.style.display = cant > 0 ? "block" : "none";
+    if(totalSpan) totalSpan.innerText = total;
+    if(contador) {
+        contador.innerText = cant;
+        contador.style.display = cant > 0 ? "block" : "none";
+    }
 }
 
-zonaEnvio.addEventListener("change", () => {
-    actualizarCarrito();
-});
+if(zonaEnvio) {
+    zonaEnvio.addEventListener("change", () => {
+        actualizarCarrito();
+    });
+}
 
 /***********************
-  4. WHATSAPP + VALIDACIÓN DE PAGO
+  4. WHATSAPP + VALIDACIÓN
 ***********************/
+const formPedido = document.getElementById("formPedido");
+if (formPedido) {
+    formPedido.onsubmit = (e) => {
+        e.preventDefault();
+        if (carrito.length === 0) return;
 
-document.getElementById("formPedido").onsubmit = (e) => {
-    e.preventDefault();
-    if (carrito.length === 0) return;
+        const nombre = document.getElementById("nombre").value;
+        const ubicacion = ubicacionInput.value;
 
-    const nombre = document.getElementById("nombre").value;
-    const ubicacion = ubicacionInput.value;
+        const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
+        const zonaTexto = opcionSeleccionada.text;
+        const precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
 
-    const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-    const zonaTexto = opcionSeleccionada.text;
-    const precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
+        const metodo = metodoPago.value;
 
-    const metodo = metodoPago.value;
+        if (!metodo) {
+            alert("Por favor seleccioná un método de pago");
+            return;
+        }
 
-    // 🔴 VALIDACIONES DE PAGO
-    if (!metodo) {
-        alert("Por favor seleccioná un método de pago");
-        return;
-    }
+        if (metodo === "mercadopago" && !pagoRealizado.checked) {
+            alert("Debes realizar el pago y marcar la casilla antes de enviar el pedido");
+            return;
+        }
 
-    if (metodo === "mercadopago" && !pagoRealizado.checked) {
-        alert("Debes realizar el pago y marcar la casilla antes de enviar el pedido");
-        return;
-    }
+        let totalProductos = 0;
+        carrito.forEach(i => totalProductos += i.precio * i.cantidad);
+        const totalFinal = totalProductos + precioEnvio;
 
-    let totalProductos = 0;
-    carrito.forEach(i => totalProductos += i.precio * i.cantidad);
+        let mensaje = `*Pedido de ${nombre}*%0A`;
+        carrito.forEach(i => {
+            mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
+        });
 
-    const totalFinal = totalProductos + precioEnvio;
+        mensaje += `%0A*Zona:* ${zonaTexto}`;
+        mensaje += `%0A*Envío:* $${precioEnvio}`;
+        mensaje += `%0A*Total productos:* $${totalProductos}`;
+        mensaje += `%0A*TOTAL FINAL:* $${totalFinal}`;
 
-    let mensaje = `*Pedido de ${nombre}*%0A`;
-    carrito.forEach(i => {
-        mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
-    });
+        if (metodo === "efectivo") mensaje += `%0A%0A *Método de pago:* Efectivo`;
+        if (metodo === "mercadopago") {
+            mensaje += `%0A%0A *Método de pago:* Mercado Pago`;
+            mensaje += `%0A *Estado:* Pago informado por el cliente`;
+        }
 
-    mensaje += `%0A*Zona:* ${zonaTexto}`;
-    mensaje += `%0A*Envío:* $${precioEnvio}`;
-    mensaje += `%0A*Total productos:* $${totalProductos}`;
-    mensaje += `%0A*TOTAL FINAL:* $${totalFinal}`;
+        if (ubicacion) {
+            mensaje += `%0A%0A *Ubicación:* %0A${encodeURIComponent(ubicacion)}`;
+        }
 
-    // 💳 INFORMACIÓN DE PAGO
-    if (metodo === "efectivo") {
-        mensaje += `%0A%0A *Método de pago:* Efectivo`;
-    }
+        window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
 
-    if (metodo === "mercadopago") {
-        mensaje += `%0A%0A *Método de pago:* Mercado Pago`;
-        mensaje += `%0A *Estado:* Pago informado por el cliente`;
-    }
+        pedidosPendientes.push({ 
+            id: Date.now(), 
+            nombre, 
+            items: [...carrito], 
+            total: totalFinal,
+            metodoPago: metodo
+        });
 
-    if (ubicacion) {
-        mensaje += `%0A%0A *Ubicación:* %0A${encodeURIComponent(ubicacion)}`;
-    }
+        localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
 
-    window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
-
-    pedidosPendientes.push({ 
-        id: Date.now(), 
-        nombre, 
-        items: [...carrito], 
-        total: totalFinal,
-        metodoPago: metodo
-    });
-
-    localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
-
-    carrito = [];
-    actualizarTodo();
-    renderPanelAdmin();
-};
+        carrito = [];
+        actualizarTodo();
+        renderPanelAdmin();
+    };
+}
 
 /***********************
   5. PANEL ADMIN
 ***********************/
 function renderPanelAdmin() {
+    if(!panelAdmin) return;
     panelAdmin.innerHTML = "<h3>Pedidos Pendientes</h3>";
     pedidosPendientes.forEach(p => {
         const div = document.createElement("div");
@@ -297,24 +304,31 @@ function cancelarPedido(id) {
 ***********************/
 if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
 
-modoBtn.onclick = () => {
-    document.body.classList.toggle("oscuro");
-    localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
-    modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
-};
+if(modoBtn) {
+    modoBtn.onclick = () => {
+        document.body.classList.toggle("oscuro");
+        localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
+        modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
+    };
+}
 
-fondoColorInput.oninput = (e) => {
-    document.body.style.backgroundColor = e.target.value;
-    localStorage.setItem("colorFondo", e.target.value);
-};
+if(fondoColorInput) {
+    fondoColorInput.oninput = (e) => {
+        document.body.style.backgroundColor = e.target.value;
+        localStorage.setItem("colorFondo", e.target.value);
+    };
+}
 
 if(localStorage.getItem("colorFondo")) {
     document.body.style.backgroundColor = localStorage.getItem("colorFondo");
 }
 
-document.querySelector(".carrito-btn").onclick = () => {
-    document.querySelector(".carrito-panel").classList.toggle("oculto");
-};
+const btnCarritoPanel = document.querySelector(".carrito-btn");
+if(btnCarritoPanel) {
+    btnCarritoPanel.onclick = () => {
+        document.querySelector(".carrito-panel").classList.toggle("oculto");
+    };
+}
 
 setInterval(() => {
     const r = document.getElementById("reloj");
@@ -330,25 +344,28 @@ document.addEventListener("keydown", (e) => {
 /***********************
   7. PAGO MERCADO PAGO UI
 ***********************/
-metodoPago.addEventListener("change", () => {
-    if (metodoPago.value === "mercadopago") {
-        btnPagarMP.style.display = "block";
-        confirmacionPago.style.display = "block";
-    } else {
-        btnPagarMP.style.display = "none";
-        confirmacionPago.style.display = "none";
-        pagoRealizado.checked = false;
-    }
-});
+if(metodoPago) {
+    metodoPago.addEventListener("change", () => {
+        if (metodoPago.value === "mercadopago") {
+            btnPagarMP.style.display = "block";
+            confirmacionPago.style.display = "block";
+        } else {
+            btnPagarMP.style.display = "none";
+            confirmacionPago.style.display = "none";
+            pagoRealizado.checked = false;
+        }
+    });
+}
 
-btnPagarMP.onclick = () => {
-    window.open(linkMercadoPago, "_blank");
-};
+if(btnPagarMP) {
+    btnPagarMP.onclick = () => {
+        window.open(linkMercadoPago, "_blank");
+    };
+}
 
 /***********************
   8. INICIO
 ***********************/
-
 cargarProductos();
 
 /***********************
@@ -371,68 +388,31 @@ function crearFondoEmojis() {
         contenedor.appendChild(span);
     }
 }
-
 crearFondoEmojis();
 
-
 /************************************************
-        CONTROL DE HORARIOS (VERSIÓN SEGURA)
+        CONTROL DE HORARIOS
 ************************************************/
-
 function horarioActivo(categoria) {
     const hora = new Date().getHours();
-
-    if (categoria === "vianda") {
-        return hora >= 7 && hora < 11;
-    }
-
-    if (categoria === "rapida") {
-        return hora >= 19 && hora < 22;
-    }
-
+    if (categoria === "vianda") return hora >= 7 && hora < 11;
+    if (categoria === "rapida") return hora >= 19 && hora < 22;
     return true;
 }
 
-/* --- Envuelve tu función original SIN romper nada --- */
-
-if (typeof agregarAlCarrito === "function") {
-
-    const agregarOriginal = agregarAlCarrito;
-
-    agregarAlCarrito = function(id) {
-
-        const prod = productos.find(p => p.id === id);
-        if (!prod) return;
-
-        if (!horarioActivo(prod.categoria)) {
-            alert("Esta sección está fuera de horario.");
-            return;
-        }
-
-        agregarOriginal(id);
-    };
-}
-
-/* --- Bloqueo al enviar pedido --- */
-
-const formHorario = document.getElementById("formPedido");
-
-if (formHorario) {
-    formHorario.addEventListener("submit", function(e) {
-
-        if (typeof carrito === "undefined") return;
-
-        const fueraHorario = carrito.some(item => !horarioActivo(item.categoria));
-
-        if (fueraHorario) {
-            alert("Tenés productos fuera de horario.");
-            e.preventDefault();
-        }
-    });
-}
+// Sobrescribir agregarAlCarrito con validación de horario
+const agregarOriginal = agregarAlCarrito;
+agregarAlCarrito = function(id) {
+    const prod = productos.find(p => p.id === id);
+    if (prod && !horarioActivo(prod.categoria)) {
+        alert("Esta sección está fuera de horario.");
+        return;
+    }
+    agregarOriginal(id);
+};
 
 /***********************
-  10. GEOLOCALIZACIÓN
+  10. GEOLOCALIZACIÓN (CORREGIDA)
 ***********************/
 const btnGps = document.getElementById("btn-cargar-gps");
 const gpsStatus = document.getElementById("gps-status");
@@ -440,7 +420,7 @@ const gpsStatus = document.getElementById("gps-status");
 if (btnGps) {
     btnGps.addEventListener("click", () => {
         if (!navigator.geolocation) {
-            gpsStatus.innerText = "Tu navegador no soporta geolocalización.";
+            gpsStatus.innerText = "GPS no disponible.";
             return;
         }
 
@@ -451,47 +431,34 @@ if (btnGps) {
             (posicion) => {
                 const lat = posicion.coords.latitude;
                 const lon = posicion.coords.longitude;
-                // Generamos el link de Google Maps
+                
+                // LINK CORREGIDO CON SINTAXIS JAVASCRIPT CORRECTA
                 const mapaLink = `https://www.google.com/maps?q=${lat},${lon}`;
                 
-                // Lo inyectamos en tu input existente
-                ubicacionInput.value = mapaLink;
-                
-                gpsStatus.innerText = "✅ Ubicación cargada correctamente.";
+                if (ubicacionInput) {
+                    ubicacionInput.value = mapaLink;
+                    gpsStatus.innerHTML = "<span style='color: green; font-weight:bold;'>✅ Ubicación cargada!</span>";
+                }
                 btnGps.disabled = false;
             },
             (error) => {
-                console.error(error);
-                gpsStatus.innerText = "❌ No se pudo obtener la ubicación.";
+                console.error("Error GPS:", error);
+                gpsStatus.innerHTML = "<span style='color: red;'>❌ Activa el GPS.</span>";
                 btnGps.disabled = false;
             },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 10000 }
         );
     });
 }
 
-
-
-
-
-/* --- Control visual --- */
-
 function actualizarEstadoSecciones() {
-
     const viandas = document.getElementById("carrusel-viandas")?.parentElement;
     const rapida = document.getElementById("carrusel-rapida")?.parentElement;
-
     const hora = new Date().getHours();
 
-    if (viandas) {
-        viandas.classList.toggle("seccion-cerrada", !(hora >= 7 && hora < 11));
-    }
-
-    if (rapida) {
-        rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 22));
-    }
+    if (viandas) viandas.classList.toggle("seccion-cerrada", !(hora >= 7 && hora < 11));
+    if (rapida) rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 22));
 }
 
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
-
