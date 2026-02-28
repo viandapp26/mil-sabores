@@ -28,6 +28,10 @@ const confirmacionPago = document.getElementById("confirmacionPago");
 // 🔗 TU LINK DE MERCADO PAGO
 const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
 
+// GPS (Movido aquí para evitar duplicados abajo)
+const btnGps = document.getElementById("btn-cargar-gps");
+const gpsStatus = document.getElementById("gps-status");
+
 // Configuración inicial de inputs
 if (zonaEnvio) zonaEnvio.disabled = false;
 if (ubicacionInput) ubicacionInput.disabled = false;
@@ -153,6 +157,15 @@ function eliminarDelCarrito(id) {
     actualizarTodo();
 }
 
+function actualizarTodo() {
+    localStorage.setItem("stockProductos", JSON.stringify(productos));
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+
+    renderSeccion("vianda", "carrusel-viandas");
+    renderSeccion("rapida", "carrusel-rapida");
+    actualizarCarrito();
+}
+
 function actualizarCarrito() {
     if(!productosDiv) return;
     productosDiv.innerHTML = "";
@@ -166,7 +179,6 @@ function actualizarCarrito() {
         productosDiv.appendChild(p);
     });
 
-    // LEER PRECIO DE ENVÍO
     let precioEnvio = 0;
     const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
     if (opcion && opcion.dataset.precio) {
@@ -182,27 +194,8 @@ function actualizarCarrito() {
     }
 }
 
-/***********************
-  GPS CORREGIDO
-***********************/
-const btnGps = document.getElementById("btn-cargar-gps");
-const gpsStatus = document.getElementById("gps-status");
-let linkUbicacionGps = ""; // Variable para guardar el link
+zonaEnvio.addEventListener("change", actualizarCarrito);
 
-if (btnGps) {
-    btnGps.addEventListener("click", () => {
-        gpsStatus.innerText = "Localizando... ⏳";
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                linkUbicacionGps = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                gpsStatus.innerHTML = "<b style='color:green'>✅ Ubicación lista</b>";
-            },
-            () => {
-                gpsStatus.innerText = "❌ Error al obtener GPS";
-            }
-        );
-    });
-}
 /***********************
   4. WHATSAPP + VALIDACIÓN
 ***********************/
@@ -214,11 +207,9 @@ if (formPedido) {
 
         const nombre = document.getElementById("nombre").value;
         const ubicacion = ubicacionInput.value;
-
         const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
         const zonaTexto = opcionSeleccionada.text;
         const precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
-
         const metodo = metodoPago.value;
 
         if (!metodo) {
@@ -231,9 +222,9 @@ if (formPedido) {
             return;
         }
 
-        let totalProductos = 0;
-        carrito.forEach(i => totalProductos += i.precio * i.cantidad);
-        const totalFinal = totalProductos + precioEnvio;
+        let subtotalPedido = 0;
+        carrito.forEach(i => subtotalPedido += i.precio * i.cantidad);
+        const totalFinal = subtotalPedido + precioEnvio;
 
         let mensaje = `*Pedido de ${nombre}*%0A`;
         carrito.forEach(i => {
@@ -242,7 +233,6 @@ if (formPedido) {
 
         mensaje += `%0A*Zona:* ${zonaTexto}`;
         mensaje += `%0A*Envío:* $${precioEnvio}`;
-        mensaje += `%0A*Total productos:* $${totalProductos}`;
         mensaje += `%0A*TOTAL FINAL:* $${totalFinal}`;
 
         if (metodo === "efectivo") mensaje += `%0A%0A *Método de pago:* Efectivo`;
@@ -266,7 +256,6 @@ if (formPedido) {
         });
 
         localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
-
         carrito = [];
         actualizarTodo();
         renderPanelAdmin();
@@ -328,24 +317,6 @@ if(localStorage.getItem("colorFondo")) {
     document.body.style.backgroundColor = localStorage.getItem("colorFondo");
 }
 
-const btnCarritoPanel = document.querySelector(".carrito-btn");
-if(btnCarritoPanel) {
-    btnCarritoPanel.onclick = () => {
-        document.querySelector(".carrito-panel").classList.toggle("oculto");
-    };
-}
-
-setInterval(() => {
-    const r = document.getElementById("reloj");
-    if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
-}, 1000);
-
-document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.shiftKey && e.code === "KeyA") {
-        if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
-    }
-});
-
 /***********************
   7. PAGO MERCADO PAGO UI
 ***********************/
@@ -369,11 +340,6 @@ if(btnPagarMP) {
 }
 
 /***********************
-  8. INICIO
-***********************/
-cargarProductos();
-
-/***********************
   9. FONDO EMOJIS
 ***********************/
 function crearFondoEmojis() {
@@ -395,33 +361,9 @@ function crearFondoEmojis() {
 }
 crearFondoEmojis();
 
-/************************************************
-        CONTROL DE HORARIOS
-************************************************/
-function horarioActivo(categoria) {
-    const hora = new Date().getHours();
-    if (categoria === "vianda") return hora >= 7 && hora < 11;
-    if (categoria === "rapida") return hora >= 19 && hora < 22;
-    return true;
-}
-
-// Sobrescribir agregarAlCarrito con validación de horario
-const agregarOriginal = agregarAlCarrito;
-agregarAlCarrito = function(id) {
-    const prod = productos.find(p => p.id === id);
-    if (prod && !horarioActivo(prod.categoria)) {
-        alert("Esta sección está fuera de horario.");
-        return;
-    }
-    agregarOriginal(id);
-};
-
 /***********************
-  10. GEOLOCALIZACIÓN (CORREGIDA)
+  10. GEOLOCALIZACIÓN
 ***********************/
-const btnGps = document.getElementById("btn-cargar-gps");
-const gpsStatus = document.getElementById("gps-status");
-
 if (btnGps) {
     btnGps.addEventListener("click", () => {
         if (!navigator.geolocation) {
@@ -437,7 +379,7 @@ if (btnGps) {
                 const lat = posicion.coords.latitude;
                 const lon = posicion.coords.longitude;
                 
-                // LINK CORREGIDO CON SINTAXIS JAVASCRIPT CORRECTA
+                // CORRECCIÓN: Usar ${variable} para los links
                 const mapaLink = `https://www.google.com/maps?q=${lat},${lon}`;
                 
                 if (ubicacionInput) {
@@ -456,6 +398,27 @@ if (btnGps) {
     });
 }
 
+/***********************
+  HORARIOS Y CIERRE
+***********************/
+function horarioActivo(categoria) {
+    const hora = new Date().getHours();
+    if (categoria === "vianda") return hora >= 7 && hora < 11;
+    if (categoria === "rapida") return hora >= 19 && hora < 22;
+    return true;
+}
+
+// Inyectar lógica de horarios en la función global
+const originalAgregar = agregarAlCarrito;
+window.agregarAlCarrito = function(id) {
+    const prod = productos.find(p => p.id === id);
+    if (prod && !horarioActivo(prod.categoria)) {
+        alert("Esta sección está fuera de horario.");
+        return;
+    }
+    originalAgregar(id);
+};
+
 function actualizarEstadoSecciones() {
     const viandas = document.getElementById("carrusel-viandas")?.parentElement;
     const rapida = document.getElementById("carrusel-rapida")?.parentElement;
@@ -465,8 +428,22 @@ function actualizarEstadoSecciones() {
     if (rapida) rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 22));
 }
 
+// Ejecución inicial
+cargarProductos();
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
+
+setInterval(() => {
+    const r = document.getElementById("reloj");
+    if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
+}, 1000);
+
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === "KeyA") {
+        if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
+    }
+});
+
 
 
 
