@@ -156,55 +156,52 @@ function eliminarDelCarrito(id) {
 function actualizarCarrito() {
     if(!productosDiv) return;
     productosDiv.innerHTML = "";
-    
-    let subtotalProductos = 0;
-    let cantTotal = 0;
+    let subtotal = 0, cant = 0;
 
-    // 1. Sumamos los productos del carrito
     carrito.forEach(i => {
-        subtotalProductos += Number(i.precio) * Number(i.cantidad);
-        cantTotal += Number(i.cantidad);
-        
+        subtotal += Number(i.precio) * Number(i.cantidad);
+        cant += i.cantidad;
         const p = document.createElement("p");
-        p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> 
-                       <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
+        p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
         productosDiv.appendChild(p);
     });
 
-    // 2. Obtener el precio de envío (ELIMINAMOS EL ERROR DE INDICE)
+    // LEER PRECIO DE ENVÍO
     let precioEnvio = 0;
-    if (zonaEnvio) {
-        // Buscamos la opción que está seleccionada actualmente
-        const indiceActual = zonaEnvio.selectedIndex;
-        const opcionOk = zonaEnvio.options[indiceActual];
-
-        if (opcionOk && opcionOk.hasAttribute("data-precio")) {
-            // Usamos parseFloat por si el precio tiene decimales
-            precioEnvio = parseFloat(opcionOk.getAttribute("data-precio"));
-        } else {
-            precioEnvio = 0;
-        }
+    const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
+    if (opcion && opcion.dataset.precio) {
+        precioEnvio = parseInt(opcion.dataset.precio);
     }
 
-    // 3. Cálculo Final
-    const totalFinal = subtotalProductos + precioEnvio;
+    const totalFinal = subtotal + precioEnvio;
 
-    // 4. Actualización de la pantalla
-    if(totalSpan) {
-        totalSpan.innerText = totalFinal; 
-    }
-    
+    if(totalSpan) totalSpan.innerText = totalFinal;
     if(contador) {
-        contador.innerText = cantTotal;
-        contador.style.display = cantTotal > 0 ? "block" : "none";
+        contador.innerText = cant;
+        contador.style.display = cant > 0 ? "block" : "none";
     }
 }
 
-// Aseguramos que el evento se dispare siempre que cambies la zona
-if(zonaEnvio) {
-    zonaEnvio.onchange = () => {
-        actualizarCarrito();
-    };
+/***********************
+  GPS CORREGIDO
+***********************/
+const btnGps = document.getElementById("btn-cargar-gps");
+const gpsStatus = document.getElementById("gps-status");
+let linkUbicacionGps = ""; // Variable para guardar el link
+
+if (btnGps) {
+    btnGps.addEventListener("click", () => {
+        gpsStatus.innerText = "Localizando... ⏳";
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                linkUbicacionGps = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                gpsStatus.innerHTML = "<b style='color:green'>✅ Ubicación lista</b>";
+            },
+            () => {
+                gpsStatus.innerText = "❌ Error al obtener GPS";
+            }
+        );
+    });
 }
 /***********************
   4. WHATSAPP + VALIDACIÓN
@@ -470,5 +467,6 @@ function actualizarEstadoSecciones() {
 
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
+
 
 
