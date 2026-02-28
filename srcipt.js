@@ -13,7 +13,7 @@ const contador = document.querySelector(".carrito-contador");
 const productosDiv = document.querySelector(".carrito-productos");
 
 const zonaEnvio = document.getElementById("zonaEnvio");
-const ubicacionInput = document.getElementById("ubicacion");
+const nombreInput = document.getElementById("nombre");
 
 const panelAdmin = document.getElementById("panel-admin");
 const modoBtn = document.getElementById("modoOscuroBtn");
@@ -25,16 +25,16 @@ const btnPagarMP = document.getElementById("btnPagarMP");
 const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
 
-// 🔗 TU LINK DE MERCADO PAGO
-const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
-
-// GPS (Movido aquí para evitar duplicados abajo)
+// GPS Elements
 const btnGps = document.getElementById("btn-cargar-gps");
 const gpsStatus = document.getElementById("gps-status");
+let linkUbicacionGps = ""; 
 
-// Configuración inicial de inputs
+// 🔗 LINK MERCADO PAGO
+const linkMercadoPago = "http://link.mercadopago.com.ar/milsaboresviandas";
+
+// Configuración inicial
 if (zonaEnvio) zonaEnvio.disabled = false;
-if (ubicacionInput) ubicacionInput.disabled = false;
 
 /***********************
   1. CARGA DE DATOS
@@ -115,7 +115,6 @@ function setupFlechas() {
             moverCarrusel("carrusel-viandas", indiceViandas);
         }
     };
-
     if(btnNextR) btnNextR.onclick = () => {
         const filtrados = productos.filter(p => p.categoria === "rapida");
         if (indiceRapida < filtrados.length - 1) {
@@ -132,7 +131,7 @@ function setupFlechas() {
 }
 
 /***********************
-  3. CARRITO
+  3. CARRITO (LÓGICA Y UI)
 ***********************/
 function agregarAlCarrito(id) {
     const prod = productos.find(p => p.id === id);
@@ -163,99 +162,89 @@ function actualizarTodo() {
 
     renderSeccion("vianda", "carrusel-viandas");
     renderSeccion("rapida", "carrusel-rapida");
-    actualizarCarrito();
+    actualizarCarritoUI();
 }
 
-function actualizarCarrito() {
+function actualizarCarritoUI() {
     if(!productosDiv) return;
     productosDiv.innerHTML = "";
-    let subtotal = 0, cant = 0;
+    let subtotalProd = 0;
+    let cantItems = 0;
 
     carrito.forEach(i => {
-        subtotal += Number(i.precio) * Number(i.cantidad);
-        cant += i.cantidad;
+        subtotalProd += Number(i.precio) * Number(i.cantidad);
+        cantItems += i.cantidad;
         const p = document.createElement("p");
         p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
         productosDiv.appendChild(p);
     });
 
+    // CORRECCIÓN PRECIO ENVÍO: Leer atributo exacto
     let precioEnvio = 0;
-    const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
-    if (opcion && opcion.dataset.precio) {
-        precioEnvio = parseInt(opcion.dataset.precio);
+    if (zonaEnvio) {
+        const opcionOk = zonaEnvio.options[zonaEnvio.selectedIndex];
+        if (opcionOk && opcionOk.hasAttribute("data-precio")) {
+            precioEnvio = parseInt(opcionOk.getAttribute("data-precio"), 10);
+        }
     }
 
-    const totalFinal = subtotal + precioEnvio;
+    const totalFinal = subtotalProd + precioEnvio;
 
     if(totalSpan) totalSpan.innerText = totalFinal;
     if(contador) {
-        contador.innerText = cant;
-        contador.style.display = cant > 0 ? "block" : "none";
+        contador.innerText = cantItems;
+        contador.style.display = cantItems > 0 ? "block" : "none";
     }
 }
 
-zonaEnvio.addEventListener("change", actualizarCarrito);
+if(zonaEnvio) zonaEnvio.onchange = actualizarCarritoUI;
 
 /***********************
-  4. WHATSAPP + VALIDACIÓN
+  4. WHATSAPP + GPS
 ***********************/
+if (btnGps) {
+    btnGps.onclick = () => {
+        gpsStatus.innerText = "Localizando... ⏳";
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                linkUbicacionGps = `https://www.google.com/maps?q=${lat},${lon}`;
+                gpsStatus.innerHTML = "<b style='color:green'>✅ Ubicación lista</b>";
+            },
+            () => { gpsStatus.innerText = "❌ Error al obtener GPS"; }
+        );
+    };
+}
+
 const formPedido = document.getElementById("formPedido");
 if (formPedido) {
     formPedido.onsubmit = (e) => {
         e.preventDefault();
         if (carrito.length === 0) return;
 
-        const nombre = document.getElementById("nombre").value;
-        const ubicacion = ubicacionInput.value;
-        const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-        const zonaTexto = opcionSeleccionada.text;
-        const precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
+        const nombre = nombreInput.value;
+        const opcion = zonaEnvio.options[zonaEnvio.selectedIndex];
         const metodo = metodoPago.value;
-
-        if (!metodo) {
-            alert("Por favor seleccioná un método de pago");
-            return;
-        }
 
         if (metodo === "mercadopago" && !pagoRealizado.checked) {
             alert("Debes realizar el pago y marcar la casilla antes de enviar el pedido");
             return;
         }
 
-        let subtotalPedido = 0;
-        carrito.forEach(i => subtotalPedido += i.precio * i.cantidad);
-        const totalFinal = subtotalPedido + precioEnvio;
+        let msg = `*Pedido de ${nombre}*%0A%0A`;
+        carrito.forEach(i => msg += `- ${i.nombre} x${i.cantidad}%0A`);
+        msg += `%0A*Zona:* ${opcion.text}`;
+        msg += `%0A*TOTAL FINAL:* $${totalSpan.innerText}`;
+        msg += `%0A*Método:* ${metodo === "efectivo" ? "Efectivo" : "Mercado Pago"}`;
+        
+        if(linkUbicacionGps) msg += `%0A%0A📍 *Ubicación:*%0A${encodeURIComponent(linkUbicacionGps)}`;
 
-        let mensaje = `*Pedido de ${nombre}*%0A`;
-        carrito.forEach(i => {
-            mensaje += `- ${i.nombre} x${i.cantidad}%0A`;
-        });
+        window.open(`https://wa.me/5493764726863?text=${msg}`, "_blank");
 
-        mensaje += `%0A*Zona:* ${zonaTexto}`;
-        mensaje += `%0A*Envío:* $${precioEnvio}`;
-        mensaje += `%0A*TOTAL FINAL:* $${totalFinal}`;
-
-        if (metodo === "efectivo") mensaje += `%0A%0A *Método de pago:* Efectivo`;
-        if (metodo === "mercadopago") {
-            mensaje += `%0A%0A *Método de pago:* Mercado Pago`;
-            mensaje += `%0A *Estado:* Pago informado por el cliente`;
-        }
-
-        if (ubicacion) {
-            mensaje += `%0A%0A *Ubicación:* %0A${encodeURIComponent(ubicacion)}`;
-        }
-
-        window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
-
-        pedidosPendientes.push({ 
-            id: Date.now(), 
-            nombre, 
-            items: [...carrito], 
-            total: totalFinal,
-            metodoPago: metodo
-        });
-
+        pedidosPendientes.push({ id: Date.now(), nombre, items: [...carrito], total: totalSpan.innerText });
         localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
+
         carrito = [];
         actualizarTodo();
         renderPanelAdmin();
@@ -294,121 +283,69 @@ function cancelarPedido(id) {
 }
 
 /***********************
-  6. UI + MODO OSCURO
+  6. UI (MODO, CARRITO, RELOJ)
 ***********************/
-if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
-/***********************
-  6. UI + MODO OSCURO + ABRIR CARRITO
-***********************/
-// Función para abrir/cerrar el carrito
-const btnCarritoPanel = document.querySelector(".carrito-btn");
+// ABRIR CARRITO
+const btnCarritoIcono = document.querySelector(".carrito-btn");
 const panelCarrito = document.querySelector(".carrito-panel");
-
-if (btnCarritoPanel && panelCarrito) {
-    btnCarritoPanel.onclick = (e) => {
-        e.preventDefault(); // Evita cualquier comportamiento extraño
-        panelCarrito.classList.toggle("oculto");
-        console.log("Carrito clickeado"); // Esto te avisará en la consola si funciona
-    };
-} else {
-    console.error("No se encontró el botón .carrito-btn o el panel .carrito-panel");
+if (btnCarritoIcono && panelCarrito) {
+    btnCarritoIcono.onclick = () => panelCarrito.classList.toggle("oculto");
 }
 
-// Modo Oscuro
+// MODO OSCURO
 if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
-
 if(modoBtn) {
     modoBtn.onclick = () => {
         document.body.classList.toggle("oscuro");
         localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
-        if(modoBtn.tagName === "BUTTON") {
-            modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
-        }
     };
 }
+
+// RELOJ
+setInterval(() => {
+    const r = document.getElementById("reloj");
+    if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
+}, 1000);
+
+// PANEL ADMIN OCULTO
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.code === "KeyA") {
+        if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
+    }
+});
+
 /***********************
   7. PAGO MERCADO PAGO UI
 ***********************/
 if(metodoPago) {
-    metodoPago.addEventListener("change", () => {
-        if (metodoPago.value === "mercadopago") {
-            btnPagarMP.style.display = "block";
-            confirmacionPago.style.display = "block";
-        } else {
-            btnPagarMP.style.display = "none";
-            confirmacionPago.style.display = "none";
-            pagoRealizado.checked = false;
-        }
-    });
-}
-
-if(btnPagarMP) {
-    btnPagarMP.onclick = () => {
-        window.open(linkMercadoPago, "_blank");
+    metodoPago.onchange = () => {
+        const esMP = metodoPago.value === "mercadopago";
+        btnPagarMP.style.display = esMP ? "block" : "none";
+        confirmacionPago.style.display = esMP ? "block" : "none";
     };
 }
+if(btnPagarMP) btnPagarMP.onclick = () => window.open(linkMercadoPago, "_blank");
 
 /***********************
-  9. FONDO EMOJIS
+  8. FONDO EMOJIS
 ***********************/
 function crearFondoEmojis() {
     const contenedor = document.getElementById("fondo-emojis");
     if (!contenedor) return;
-
-    contenedor.innerHTML = "";
     const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑", "🥩", "🍲", "🥘", "🥦", "🍝", "🍕", "🌯"];
-
     for (let i = 0; i < 80; i++) {
         const span = document.createElement("span");
         span.classList.add("emoji-flotante");
         span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
         span.style.left = `${Math.random() * 100}vw`;
         span.style.top = `${Math.random() * 100}vh`;
-        span.style.transform = `rotate(${Math.random() * 360}deg)`;
         contenedor.appendChild(span);
     }
 }
 crearFondoEmojis();
 
 /***********************
-  10. GEOLOCALIZACIÓN
-***********************/
-if (btnGps) {
-    btnGps.addEventListener("click", () => {
-        if (!navigator.geolocation) {
-            gpsStatus.innerText = "GPS no disponible.";
-            return;
-        }
-
-        gpsStatus.innerText = "Localizando... ⏳";
-        btnGps.disabled = true;
-
-        navigator.geolocation.getCurrentPosition(
-            (posicion) => {
-                const lat = posicion.coords.latitude;
-                const lon = posicion.coords.longitude;
-                
-                // CORRECCIÓN: Usar ${variable} para los links
-                const mapaLink = `https://www.google.com/maps?q=${lat},${lon}`;
-                
-                if (ubicacionInput) {
-                    ubicacionInput.value = mapaLink;
-                    gpsStatus.innerHTML = "<span style='color: green; font-weight:bold;'>✅ Ubicación cargada!</span>";
-                }
-                btnGps.disabled = false;
-            },
-            (error) => {
-                console.error("Error GPS:", error);
-                gpsStatus.innerHTML = "<span style='color: red;'>❌ Activa el GPS.</span>";
-                btnGps.disabled = false;
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
-    });
-}
-
-/***********************
-  HORARIOS Y CIERRE
+  9. CONTROL DE HORARIOS
 ***********************/
 function horarioActivo(categoria) {
     const hora = new Date().getHours();
@@ -417,7 +354,6 @@ function horarioActivo(categoria) {
     return true;
 }
 
-// Inyectar lógica de horarios en la función global
 const originalAgregar = agregarAlCarrito;
 window.agregarAlCarrito = function(id) {
     const prod = productos.find(p => p.id === id);
@@ -432,28 +368,11 @@ function actualizarEstadoSecciones() {
     const viandas = document.getElementById("carrusel-viandas")?.parentElement;
     const rapida = document.getElementById("carrusel-rapida")?.parentElement;
     const hora = new Date().getHours();
-
     if (viandas) viandas.classList.toggle("seccion-cerrada", !(hora >= 7 && hora < 11));
     if (rapida) rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 22));
 }
 
-// Ejecución inicial
+// INICIO FINAL
 cargarProductos();
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
-
-setInterval(() => {
-    const r = document.getElementById("reloj");
-    if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
-}, 1000);
-
-document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.shiftKey && e.code === "KeyA") {
-        if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
-    }
-});
-
-
-
-
-
