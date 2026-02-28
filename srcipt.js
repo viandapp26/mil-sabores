@@ -431,6 +431,49 @@ if (formHorario) {
     });
 }
 
+/***********************
+  10. GEOLOCALIZACIÓN
+***********************/
+const btnGps = document.getElementById("btn-cargar-gps");
+const gpsStatus = document.getElementById("gps-status");
+
+if (btnGps) {
+    btnGps.addEventListener("click", () => {
+        if (!navigator.geolocation) {
+            gpsStatus.innerText = "Tu navegador no soporta geolocalización.";
+            return;
+        }
+
+        gpsStatus.innerText = "Localizando... ⏳";
+        btnGps.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            (posicion) => {
+                const lat = posicion.coords.latitude;
+                const lon = posicion.coords.longitude;
+                // Generamos el link de Google Maps
+                const mapaLink = `https://www.google.com/maps?q=${lat},${lon}`;
+                
+                // Lo inyectamos en tu input existente
+                ubicacionInput.value = mapaLink;
+                
+                gpsStatus.innerText = "✅ Ubicación cargada correctamente.";
+                btnGps.disabled = false;
+            },
+            (error) => {
+                console.error(error);
+                gpsStatus.innerText = "❌ No se pudo obtener la ubicación.";
+                btnGps.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    });
+}
+
+
+
+
+
 /* --- Control visual --- */
 
 function actualizarEstadoSecciones() {
@@ -451,3 +494,4 @@ function actualizarEstadoSecciones() {
 
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
+
