@@ -297,26 +297,35 @@ function cancelarPedido(id) {
   6. UI + MODO OSCURO
 ***********************/
 if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
+/***********************
+  6. UI + MODO OSCURO + ABRIR CARRITO
+***********************/
+// Función para abrir/cerrar el carrito
+const btnCarritoPanel = document.querySelector(".carrito-btn");
+const panelCarrito = document.querySelector(".carrito-panel");
+
+if (btnCarritoPanel && panelCarrito) {
+    btnCarritoPanel.onclick = (e) => {
+        e.preventDefault(); // Evita cualquier comportamiento extraño
+        panelCarrito.classList.toggle("oculto");
+        console.log("Carrito clickeado"); // Esto te avisará en la consola si funciona
+    };
+} else {
+    console.error("No se encontró el botón .carrito-btn o el panel .carrito-panel");
+}
+
+// Modo Oscuro
+if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
 
 if(modoBtn) {
     modoBtn.onclick = () => {
         document.body.classList.toggle("oscuro");
         localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
-        modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
+        if(modoBtn.tagName === "BUTTON") {
+            modoBtn.textContent = document.body.classList.contains("oscuro") ? "☀️" : "🌙";
+        }
     };
 }
-
-if(fondoColorInput) {
-    fondoColorInput.oninput = (e) => {
-        document.body.style.backgroundColor = e.target.value;
-        localStorage.setItem("colorFondo", e.target.value);
-    };
-}
-
-if(localStorage.getItem("colorFondo")) {
-    document.body.style.backgroundColor = localStorage.getItem("colorFondo");
-}
-
 /***********************
   7. PAGO MERCADO PAGO UI
 ***********************/
@@ -443,6 +452,7 @@ document.addEventListener("keydown", (e) => {
         if (prompt("Clave:") === "181222") panelAdmin.classList.toggle("mostrar");
     }
 });
+
 
 
 
