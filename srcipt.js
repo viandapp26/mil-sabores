@@ -165,39 +165,49 @@ function actualizarTodo() {
 function actualizarCarrito() {
     if(!productosDiv) return;
     productosDiv.innerHTML = "";
-    let total = 0, cant = 0;
+    
+    let subtotalProductos = 0;
+    let cantTotal = 0;
 
+    // 1. Calcular productos en el carrito
     carrito.forEach(i => {
-        total += i.precio * i.cantidad;
-        cant += i.cantidad;
+        subtotalProductos += Number(i.precio) * Number(i.cantidad);
+        cantTotal += Number(i.cantidad);
+        
         const p = document.createElement("p");
-        p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
+        p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> 
+                       <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
         productosDiv.appendChild(p);
     });
 
+    // 2. Obtener el precio de envío de la zona seleccionada
     let precioEnvio = 0;
-    if (zonaEnvio) {
+    if (zonaEnvio && zonaEnvio.selectedIndex !== -1) {
         const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-        if (opcionSeleccionada) {
-            precioEnvio = parseInt(opcionSeleccionada.dataset.precio) || 0;
-        }
+        
+        // Extraemos el data-precio y nos aseguramos que sea un número
+        const valorData = opcionSeleccionada.getAttribute("data-precio");
+        precioEnvio = parseInt(valorData, 10) || 0;
     }
 
-    total += precioEnvio;
+    // 3. Calcular Total Final (Suma matemática pura)
+    const totalFinal = subtotalProductos + precioEnvio;
 
-    if(totalSpan) totalSpan.innerText = total;
+    // 4. Actualizar la interfaz (UI)
+    if(totalSpan) {
+        totalSpan.innerText = totalFinal.toLocaleString('es-AR'); // Formato con puntos de miles
+    }
+    
     if(contador) {
-        contador.innerText = cant;
-        contador.style.display = cant > 0 ? "block" : "none";
+        contador.innerText = cantTotal;
+        contador.style.display = cantTotal > 0 ? "block" : "none";
     }
 }
 
+// Escuchar cambios en la zona de envío para recalcular al instante
 if(zonaEnvio) {
-    zonaEnvio.addEventListener("change", () => {
-        actualizarCarrito();
-    });
+    zonaEnvio.addEventListener("change", actualizarCarrito);
 }
-
 /***********************
   4. WHATSAPP + VALIDACIÓN
 ***********************/
@@ -462,3 +472,4 @@ function actualizarEstadoSecciones() {
 
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
+
