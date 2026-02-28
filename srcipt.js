@@ -153,15 +153,6 @@ function eliminarDelCarrito(id) {
     actualizarTodo();
 }
 
-function actualizarTodo() {
-    localStorage.setItem("stockProductos", JSON.stringify(productos));
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-
-    renderSeccion("vianda", "carrusel-viandas");
-    renderSeccion("rapida", "carrusel-rapida");
-    actualizarCarrito();
-}
-
 function actualizarCarrito() {
     if(!productosDiv) return;
     productosDiv.innerHTML = "";
@@ -169,7 +160,7 @@ function actualizarCarrito() {
     let subtotalProductos = 0;
     let cantTotal = 0;
 
-    // 1. Calcular productos en el carrito
+    // 1. Sumamos los productos del carrito
     carrito.forEach(i => {
         subtotalProductos += Number(i.precio) * Number(i.cantidad);
         cantTotal += Number(i.cantidad);
@@ -180,22 +171,27 @@ function actualizarCarrito() {
         productosDiv.appendChild(p);
     });
 
-    // 2. Obtener el precio de envío de la zona seleccionada
+    // 2. Obtener el precio de envío (ELIMINAMOS EL ERROR DE INDICE)
     let precioEnvio = 0;
-    if (zonaEnvio && zonaEnvio.selectedIndex !== -1) {
-        const opcionSeleccionada = zonaEnvio.options[zonaEnvio.selectedIndex];
-        
-        // Extraemos el data-precio y nos aseguramos que sea un número
-        const valorData = opcionSeleccionada.getAttribute("data-precio");
-        precioEnvio = parseInt(valorData, 10) || 0;
+    if (zonaEnvio) {
+        // Buscamos la opción que está seleccionada actualmente
+        const indiceActual = zonaEnvio.selectedIndex;
+        const opcionOk = zonaEnvio.options[indiceActual];
+
+        if (opcionOk && opcionOk.hasAttribute("data-precio")) {
+            // Usamos parseFloat por si el precio tiene decimales
+            precioEnvio = parseFloat(opcionOk.getAttribute("data-precio"));
+        } else {
+            precioEnvio = 0;
+        }
     }
 
-    // 3. Calcular Total Final (Suma matemática pura)
+    // 3. Cálculo Final
     const totalFinal = subtotalProductos + precioEnvio;
 
-    // 4. Actualizar la interfaz (UI)
+    // 4. Actualización de la pantalla
     if(totalSpan) {
-        totalSpan.innerText = totalFinal.toLocaleString('es-AR'); // Formato con puntos de miles
+        totalSpan.innerText = totalFinal; 
     }
     
     if(contador) {
@@ -204,9 +200,11 @@ function actualizarCarrito() {
     }
 }
 
-// Escuchar cambios en la zona de envío para recalcular al instante
+// Aseguramos que el evento se dispare siempre que cambies la zona
 if(zonaEnvio) {
-    zonaEnvio.addEventListener("change", actualizarCarrito);
+    zonaEnvio.onchange = () => {
+        actualizarCarrito();
+    };
 }
 /***********************
   4. WHATSAPP + VALIDACIÓN
@@ -472,4 +470,5 @@ function actualizarEstadoSecciones() {
 
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
+
 
