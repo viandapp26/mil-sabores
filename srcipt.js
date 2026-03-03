@@ -81,20 +81,33 @@ function moverCarrusel(idContenedor, indice) {
 }
 
 function setupFlechas() {
-    document.getElementById("next-viandas").onclick = () => {
-        const cant = productos.filter(p => p.categoria === "vianda").length;
-        if (indiceViandas < cant - 1) { indiceViandas++; moverCarrusel("carrusel-viandas", indiceViandas); }
-    };
-    document.getElementById("prev-viandas").onclick = () => {
-        if (indiceViandas > 0) { indiceViandas--; moverCarrusel("carrusel-viandas", indiceViandas); }
-    };
-    document.getElementById("next-rapida").onclick = () => {
-        const cant = productos.filter(p => p.categoria === "rapida").length;
-        if (indiceRapida < cant - 1) { indiceRapida++; moverCarrusel("carrusel-rapida", indiceRapida); }
-    };
-    document.getElementById("prev-rapida").onclick = () => {
-        if (indiceRapida > 0) { indiceRapida--; moverCarrusel("carrusel-rapida", indiceRapida); }
-    };
+    const btnNextViandas = document.getElementById("next-viandas");
+    const btnPrevViandas = document.getElementById("prev-viandas");
+    const btnNextRapida = document.getElementById("next-rapida");
+    const btnPrevRapida = document.getElementById("prev-rapida");
+
+    if (btnNextViandas) {
+        btnNextViandas.onclick = () => {
+            const cant = productos.filter(p => p.categoria === "vianda").length;
+            if (indiceViandas < cant - 1) { indiceViandas++; moverCarrusel("carrusel-viandas", indiceViandas); }
+        };
+    }
+    if (btnPrevViandas) {
+        btnPrevViandas.onclick = () => {
+            if (indiceViandas > 0) { indiceViandas--; moverCarrusel("carrusel-viandas", indiceViandas); }
+        };
+    }
+    if (btnNextRapida) {
+        btnNextRapida.onclick = () => {
+            const cant = productos.filter(p => p.categoria === "rapida").length;
+            if (indiceRapida < cant - 1) { indiceRapida++; moverCarrusel("carrusel-rapida", indiceRapida); }
+        };
+    }
+    if (btnPrevRapida) {
+        btnPrevRapida.onclick = () => {
+            if (indiceRapida > 0) { indiceRapida--; moverCarrusel("carrusel-rapida", indiceRapida); }
+        };
+    }
 }
 
 /***********************
@@ -131,6 +144,7 @@ function actualizarTodo() {
 }
 
 function actualizarCarritoUI() {
+    if (!productosDiv) return;
     productosDiv.innerHTML = "";
     let subtotal = 0, cantItems = 0;
     carrito.forEach(i => {
@@ -138,15 +152,22 @@ function actualizarCarritoUI() {
         cantItems += i.cantidad;
         const p = document.createElement("div");
         p.className = "carrito-item";
+        p.style.display = "flex";
+        p.style.justifyContent = "space-between";
+        p.style.marginBottom = "10px";
         p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
         productosDiv.appendChild(p);
     });
-    const precioEnvio = parseInt(zonaEnvio.options[zonaEnvio.selectedIndex]?.dataset.precio || 0);
-    totalSpan.innerText = subtotal + precioEnvio;
-    contador.innerText = cantItems;
-    contador.style.display = cantItems > 0 ? "block" : "none";
+    
+    const precioEnvio = zonaEnvio ? parseInt(zonaEnvio.options[zonaEnvio.selectedIndex]?.dataset.precio || 0) : 0;
+    if (totalSpan) totalSpan.innerText = subtotal + precioEnvio;
+    if (contador) {
+        contador.innerText = cantItems;
+        contador.style.display = cantItems > 0 ? "block" : "none";
+    }
 }
-zonaEnvio.onchange = actualizarCarritoUI;
+
+if (zonaEnvio) zonaEnvio.onchange = actualizarCarritoUI;
 
 /***********************
   4. FUNCIONALIDADES EXTRAS
@@ -163,6 +184,7 @@ if (btnGps) {
         gpsStatus.innerText = "Localizando...";
         navigator.geolocation.getCurrentPosition(
             (pos) => {
+                // CORREGIDO: Error de template string {pos.coords...} a ${pos.coords...}
                 linkUbicacionGps = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
                 gpsStatus.innerHTML = "<b style='color:green'>✅ Lista</b>";
             },
@@ -171,37 +193,49 @@ if (btnGps) {
     };
 }
 
-metodoPago.onchange = () => {
-    const esMP = metodoPago.value === "mercadopago";
-    btnPagarMP.style.display = esMP ? "block" : "none";
-    confirmacionPago.style.display = esMP ? "block" : "none";
-};
-btnPagarMP.onclick = () => window.open(linkMercadoPago, "_blank");
+if (metodoPago) {
+    metodoPago.onchange = () => {
+        const esMP = metodoPago.value === "mercadopago";
+        if (btnPagarMP) btnPagarMP.style.display = esMP ? "block" : "none";
+        if (confirmacionPago) confirmacionPago.style.display = esMP ? "block" : "none";
+    };
+}
 
-document.getElementById("formPedido").onsubmit = (e) => {
-    e.preventDefault();
-    if (carrito.length === 0) return;
-    if (metodoPago.value === "mercadopago" && !pagoRealizado.checked) {
-        alert("Por favor, confirma que realizaste el pago."); return;
-    }
+if (btnPagarMP) btnPagarMP.onclick = () => window.open(linkMercadoPago, "_blank");
 
-    let mensaje = `*Nuevo Pedido - MIL SABORES*%0A%0A*Nombre:* ${nombreInput.value}%0A`;
-    carrito.forEach(i => mensaje += `- ${i.nombre} x${i.cantidad}%0A`);
-    mensaje += `%0A*Zona:* ${zonaEnvio.options[zonaEnvio.selectedIndex].text}`;
-    mensaje += `%0A*Total:* $${totalSpan.innerText}`;
-    if(linkUbicacionGps) mensaje += `%0A📍 *Ubicación:* ${linkUbicacionGps}`;
+const formPedido = document.getElementById("formPedido");
+if (formPedido) {
+    formPedido.onsubmit = (e) => {
+        e.preventDefault();
+        if (carrito.length === 0) return;
+        if (metodoPago.value === "mercadopago" && !pagoRealizado.checked) {
+            alert("Por favor, confirma que realizaste el pago."); return;
+        }
 
-    window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
-    carrito = []; 
-    actualizarTodo();
-    document.querySelector(".carrito-panel").classList.add("oculto");
-};
+        let mensaje = `*Nuevo Pedido - MIL SABORES*%0A%0A*Nombre:* ${nombreInput.value}%0A`;
+        carrito.forEach(i => mensaje += `- ${i.nombre} x${i.cantidad}%0A`);
+        mensaje += `%0A*Zona:* ${zonaEnvio.options[zonaEnvio.selectedIndex].text}`;
+        mensaje += `%0A*Total:* $${totalSpan.innerText}`;
+        if(linkUbicacionGps) mensaje += `%0A📍 *Ubicación:* ${linkUbicacionGps}`;
+
+        window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
+        
+        // Limpiar carrito tras pedido
+        carrito = []; 
+        actualizarTodo();
+        document.querySelector(".carrito-panel").classList.add("oculto");
+    };
+}
 
 /***********************
   5. UI
 ***********************/
-document.querySelector(".carrito-btn").onclick = () => document.querySelector(".carrito-panel").classList.remove("oculto");
-document.getElementById("btnCerrarCarrito").onclick = () => document.querySelector(".carrito-panel").classList.add("oculto");
+const btnAbrirCarrito = document.querySelector(".carrito-btn");
+const btnCerrarCarrito = document.getElementById("btnCerrarCarrito");
+const panelCarrito = document.querySelector(".carrito-panel");
+
+if (btnAbrirCarrito) btnAbrirCarrito.onclick = () => panelCarrito.classList.remove("oculto");
+if (btnCerrarCarrito) btnCerrarCarrito.onclick = () => panelCarrito.classList.add("oculto");
 
 setInterval(() => {
     const r = document.getElementById("reloj");
@@ -209,13 +243,17 @@ setInterval(() => {
 }, 1000);
 
 if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
-modoBtn.onclick = () => {
-    document.body.classList.toggle("oscuro");
-    localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
-};
+
+if (modoBtn) {
+    modoBtn.onclick = () => {
+        document.body.classList.toggle("oscuro");
+        localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
+    };
+}
 
 function crearFondoEmojis() {
     const cont = document.getElementById("fondo-emojis");
+    if (!cont) return;
     const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑"];
     for (let i = 0; i < 20; i++) {
         const span = document.createElement("span");
@@ -227,5 +265,6 @@ function crearFondoEmojis() {
     }
 }
 
+// INICIO
 cargarProductos();
 crearFondoEmojis();
