@@ -272,20 +272,26 @@ crearFondoEmojis();
 function aplicarBloqueoHorario() {
     const ahora = new Date();
     const hora = ahora.getHours();
+    const diaSemana = ahora.getDay(); // 0: Dom, 1: Lun, 2: Mar, 3: Mié, 4: Jue, 5: Vie, 6: Sáb
 
-    // Configuración de horarios y mensajes
+    // CONFIGURACIÓN DINÁMICA
     const configuracion = [
         {
             id: "carrusel-viandas",
-            abierto: (hora >= 7 && hora < 23),
+            // Lunes (1) a Viernes (5) + Horario 7 a 23
+            abierto: (diaSemana >= 1 && diaSemana <= 5) && (hora >= 7 && hora < 23),
             mensaje: "CERRADO POR HORARIO",
-            vuelve: "7:00 hs"
+            horarioTexto: "Lun. a Vie. de 07:00 a 23:00 hs",
+            vuelve: (diaSemana >= 1 && diaSemana < 5) ? "mañana a las 07:00 hs" : "el Lunes a las 07:00 hs"
         },
         {
             id: "carrusel-rapida",
-            abierto: (hora >= 19 && hora < 24),
+            // Miércoles (3) a Domingo (0) + Horario 19 a 00
+            // Nota: (diaSemana >= 3 || diaSemana === 0) cubre Mié, Jue, Vie, Sáb, Dom
+            abierto: (diaSemana >= 3 || diaSemana === 0) && (hora >= 19 && hora < 24),
             mensaje: "CERRADO POR HORARIO",
-            vuelve: "19:00 hs"
+            horarioTexto: "Mié. a Dom. de 19:00 a 00:00 hs",
+            vuelve: (diaSemana === 0 || diaSemana < 3) ? "el Miércoles a las 19:00 hs" : "mañana a las 19:00 hs"
         }
     ];
 
@@ -293,31 +299,28 @@ function aplicarBloqueoHorario() {
         const carrusel = document.getElementById(seccion.id);
         if (!carrusel) return;
 
-        // El padre directo que queremos poner gris
         const contenedor = carrusel.parentElement;
 
-        // Limpiamos bloqueos previos para no duplicar
+        // Limpieza de estados previos
         contenedor.classList.remove("contenedor-bloqueado");
         const cartelPrevio = contenedor.querySelector(".cartel-horario");
         if (cartelPrevio) cartelPrevio.remove();
 
         if (!seccion.abierto) {
-            // Aplicamos clase gris
             contenedor.classList.add("contenedor-bloqueado");
 
-            // Creamos el cartel dinámicamente
             const cartel = document.createElement("div");
             cartel.className = "cartel-horario";
             cartel.innerHTML = `
                 <h4>${seccion.mensaje}</h4>
-                <p>Volveremos a las <b>${seccion.vuelve}</b>.<br>¡Te esperamos!</p>
+                <p>Atendemos: <br><b>${seccion.horarioTexto}</b></p>
+                <p style="margin-top:10px; font-size: 0.8rem; color: #ffcc00;">Vuelve ${seccion.vuelve}</p>
             `;
             contenedor.appendChild(cartel);
         }
     });
 }
 
-// Ejecutar al cargar
+// Ejecutar
 aplicarBloqueoHorario();
-// Revisar cada minuto
 setInterval(aplicarBloqueoHorario, 60000);
