@@ -897,3 +897,10 @@ body.dark-mode #reloj {
         padding: 15px;
     }
 }
+
+
+.cartel-horario p b {
+    color: #fff;
+    display: block;
+    margin-top: 5px;
+}
