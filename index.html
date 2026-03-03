@@ -1,106 +1,63 @@
 <!DOCTYPE html>
-<html>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Edu+SA+Hand:wght@400..700&display=swap');
-</style>
-
-
-
+<html lang="es">
 <head>
-  <title>MIL SABORES VIANDAS</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MIL SABORES VIANDAS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 <div id="fondo-emojis"></div>
 
 <header class="encabezado">
-  <div class="logo-titulo">
-    <h1>MIL SABORES </h1>
-    <img src="logo.png" alt="Logo de Viandapp">
-  </div>
-<input type="color" id="fondoColor">
+    <div class="logo-titulo">
+        <h1>MIL SABORES</h1>
+        <img src="logo.png" alt="Logo de Viandapp">
+    </div>
+    <input type="color" id="fondoColor">
 
-  <div class="header-info">
-    <div id="reloj">00:00:00</div>
-    <button id="modoOscuroBtn">🌙</button>
-    <button class="carrito-btn">
-      🛒
-      <span class="carrito-contador">0</span>
-    </button>
-
-  </div>
+    <div class="header-info">
+        <div id="reloj">00:00:00</div>
+        <button id="modoOscuroBtn">🌙</button>
+        <button class="carrito-btn">
+            🛒 <span class="carrito-contador">0</span>
+        </button>
+    </div>
 </header>
 
-
 <div class="carrito-panel oculto">
-    <div class="carrito-panel oculto">
-  <button type="button" class="cerrar-carrito-btn" id="btnCerrarCarrito">✖</button>
-  
-  <h2>Tu pedido</h2>
+    <button type="button" class="cerrar-carrito-btn" id="btnCerrarCarrito">✖</button>
+    <h2>Tu pedido</h2>
+    <div class="carrito-productos"></div>
+    <p class="total">Total: $<span id="total-precio">0</span></p>
 
-  <div class="carrito-productos">
-    
-  </div>
-
-  <p class="total">
-    Total: $<span id="total-precio">0</span>
-  </p>
-
-
-  <form id="formPedido">
-    <input
-      type="text"
-      id="nombre"
-      placeholder="Nombre y apellido"
-      required
-    >
-
-   <div class="grupo-ubicacion">
-    <button type="button" id="btn-cargar-gps" class="btn-gps">
-        📍 Cargar mi ubicación actual
-    </button>
-    <span id="gps-status"></span>
-</div>
-<select id="zonaEnvio">
-    <option value="0" data-precio="0">Seleccione su barrio/zona para envíos</option>
-    <option value="zona1" data-precio="500">Zona 1 - $500</option>
-    <option value="zona2" data-precio="1000">Zona 2 - $1000</option>
-    <option value="zona3" data-precio="1500">Zona 3 - $1500</option>
-    <option value="zona4" data-precio="2000">Zona 4 - $2000</option>
-    <option value="zona5" data-precio="2500">Zona 5 - $2500</option>
-</select>
-        <!-- MÉTODO DE PAGO -->
-<select id="metodoPago" required>
-  <option value="">Seleccione método de pago</option>
-  <option value="efectivo">Efectivo</option>
-  <option value="mercadopago">Billeteras Virtuales</option>
-</select>
-
-<!-- BOTÓN MERCADO PAGO -->
-<button type="button" id="btnPagarMP" style="display:none;">
-  💳 Transferencia (Billeteras Virtuales)
-</button>
-
-<!-- CONFIRMACIÓN DE PAGO -->
-<label style="display:none;" id="confirmacionPago">
-  <input type="checkbox" id="pagoRealizado">
-  Ya realicé el pago
-</label>
-
-
-    <button type="submit" class="confirmar-btn">
-      Confirmar pedido
-    </button>
-  </form>
+    <form id="formPedido">
+        <input type="text" id="nombre" placeholder="Nombre y apellido" required>
+        <div class="grupo-ubicacion">
+            <button type="button" id="btn-cargar-gps" class="btn-gps">📍 Cargar mi ubicación actual</button>
+            <span id="gps-status"></span>
+        </div>
+        <select id="zonaEnvio">
+            <option value="0" data-precio="0">Seleccione su zona</option>
+            <option value="zona1" data-precio="500">Zona 1 - $500</option>
+            <option value="zona2" data-precio="1000">Zona 2 - $1000</option>
+            <option value="zona3" data-precio="1500">Zona 3 - $1500</option>
+            <option value="zona4" data-precio="2000">Zona 4 - $2000</option>
+            <option value="zona5" data-precio="2500">Zona 5 - $2500</option>
+        </select>
+        <select id="metodoPago" required>
+            <option value="">Método de pago</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="mercadopago">Billeteras Virtuales</option>
+        </select>
+        <button type="button" id="btnPagarMP" style="display:none;">💳 Transferencia</button>
+        <label style="display:none;" id="confirmacionPago">
+            <input type="checkbox" id="pagoRealizado"> Ya realicé el pago
+        </label>
+        <button type="submit" class="confirmar-btn">Confirmar pedido</button>
+    </form>
 </div>
 
 <h2 class="titulo-seccion">Nuestras Viandas</h2>
@@ -122,21 +79,12 @@
 </div>
 
 <div class="frase-cinta">
-  <span>🍽️ Cocinamos hoy para que vos descanses 💙</span>
+    <span>🍽️ Cocinamos hoy para que vos descanses 💙</span>
 </div>
 
+<div id="panel-admin" class="panel-admin"></div>
 
-
-<div id="panel-admin" class="panel-admin">
-  <!-- Aquí aparecerán los pedidos pendientes -->
-</div>
-<section class="productos-section">
-  ...
-</section>
-
-
-
-<script src="srcipt.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
 
