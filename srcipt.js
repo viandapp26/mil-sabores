@@ -16,13 +16,11 @@ const nombreInput = document.getElementById("nombre");
 const panelAdmin = document.getElementById("panel-admin");
 const modoBtn = document.getElementById("modoOscuroBtn");
 
-// Pago
 const metodoPago = document.getElementById("metodoPago");
 const btnPagarMP = document.getElementById("btnPagarMP");
 const pagoRealizado = document.getElementById("pagoRealizado");
 const confirmacionPago = document.getElementById("confirmacionPago");
 
-// GPS
 const btnGps = document.getElementById("btn-cargar-gps");
 const gpsStatus = document.getElementById("gps-status");
 let linkUbicacionGps = ""; 
@@ -50,7 +48,7 @@ async function cargarProductos() {
 }
 
 /***********************
-  2. RENDER Y CARRUSELES (TUS BOTONES)
+  2. RENDER Y CARRUSELES
 ***********************/
 function renderSeccion(categoria, idContenedor) {
     const contenedor = document.getElementById(idContenedor);
@@ -76,70 +74,41 @@ function renderSeccion(categoria, idContenedor) {
 
 function moverCarrusel(idContenedor, indice) {
     const carrusel = document.getElementById(idContenedor);
-    if (!carrusel) return;
-    const tarjeta = carrusel.querySelector(".producto");
+    const tarjeta = carrusel?.querySelector(".producto");
     if (!tarjeta) return;
-    
-    const estilo = window.getComputedStyle(tarjeta);
-    const margenDerecho = parseFloat(estilo.marginRight) || 20;
-    const anchoTotal = tarjeta.offsetWidth + margenDerecho;
-
+    const anchoTotal = tarjeta.offsetWidth + 16; 
     carrusel.style.transform = `translateX(-${indice * anchoTotal}px)`;
 }
 
 function setupFlechas() {
-    // Restauramos tus eventos de clic exactos
-    const btnNextV = document.getElementById("next-viandas");
-    const btnPrevV = document.getElementById("prev-viandas");
-    const btnNextR = document.getElementById("next-rapida");
-    const btnPrevR = document.getElementById("prev-rapida");
-
-    if(btnNextV) btnNextV.onclick = () => {
-        const filtrados = productos.filter(p => p.categoria === "vianda");
-        if (indiceViandas < filtrados.length - 1) {
-            indiceViandas++;
-            moverCarrusel("carrusel-viandas", indiceViandas);
-        }
+    document.getElementById("next-viandas").onclick = () => {
+        const cant = productos.filter(p => p.categoria === "vianda").length;
+        if (indiceViandas < cant - 1) { indiceViandas++; moverCarrusel("carrusel-viandas", indiceViandas); }
     };
-    if(btnPrevV) btnPrevV.onclick = () => {
-        if (indiceViandas > 0) {
-            indiceViandas--;
-            moverCarrusel("carrusel-viandas", indiceViandas);
-        }
+    document.getElementById("prev-viandas").onclick = () => {
+        if (indiceViandas > 0) { indiceViandas--; moverCarrusel("carrusel-viandas", indiceViandas); }
     };
-    if(btnNextR) btnNextR.onclick = () => {
-        const filtrados = productos.filter(p => p.categoria === "rapida");
-        if (indiceRapida < filtrados.length - 1) {
-            indiceRapida++;
-            moverCarrusel("carrusel-rapida", indiceRapida);
-        }
+    document.getElementById("next-rapida").onclick = () => {
+        const cant = productos.filter(p => p.categoria === "rapida").length;
+        if (indiceRapida < cant - 1) { indiceRapida++; moverCarrusel("carrusel-rapida", indiceRapida); }
     };
-    if(btnPrevR) btnPrevR.onclick = () => {
-        if (indiceRapida > 0) {
-            indiceRapida--;
-            moverCarrusel("carrusel-rapida", indiceRapida);
-        }
+    document.getElementById("prev-rapida").onclick = () => {
+        if (indiceRapida > 0) { indiceRapida--; moverCarrusel("carrusel-rapida", indiceRapida); }
     };
 }
 
 /***********************
-  3. CARRITO (TU LÓGICA DE HORARIOS RESTAURADA)
+  3. CARRITO
 ***********************/
 window.agregarAlCarrito = function(id) {
     const prod = productos.find(p => p.id === id);
     if (!prod || prod.stock <= 0) return;
-
-    // VOLVEMOS A TUS HORARIOS ORIGINALES
-    if (!horarioActivo(prod.categoria)) {
-        alert("Esta sección está fuera de horario.");
-        return;
-    }
+    if (!horarioActivo(prod.categoria)) { alert("Esta sección está fuera de horario."); return; }
 
     prod.stock--;
     const item = carrito.find(c => c.id === id);
     if (item) item.cantidad++;
     else carrito.push({ ...prod, cantidad: 1 });
-
     actualizarTodo();
 };
 
@@ -162,64 +131,101 @@ function actualizarTodo() {
 }
 
 function actualizarCarritoUI() {
-    if(!productosDiv) return;
     productosDiv.innerHTML = "";
     let subtotal = 0, cantItems = 0;
-
     carrito.forEach(i => {
-        subtotal += Number(i.precio) * Number(i.cantidad);
+        subtotal += i.precio * i.cantidad;
         cantItems += i.cantidad;
-        const p = document.createElement("p");
+        const p = document.createElement("div");
+        p.className = "carrito-item";
         p.innerHTML = `<span>${i.nombre} x${i.cantidad}</span> <button onclick="eliminarDelCarrito(${i.id})">🗑️</button>`;
         productosDiv.appendChild(p);
     });
-
-    let precioEnvio = 0;
-    if (zonaEnvio) {
-        const opc = zonaEnvio.options[zonaEnvio.selectedIndex];
-        precioEnvio = opc ? parseInt(opc.getAttribute("data-precio") || 0) : 0;
-    }
-
-    if(totalSpan) totalSpan.innerText = subtotal + precioEnvio;
-    if(contador) {
-        contador.innerText = cantItems;
-        contador.style.display = cantItems > 0 ? "block" : "none";
-    }
+    const precioEnvio = parseInt(zonaEnvio.options[zonaEnvio.selectedIndex]?.dataset.precio || 0);
+    totalSpan.innerText = subtotal + precioEnvio;
+    contador.innerText = cantItems;
+    contador.style.display = cantItems > 0 ? "block" : "none";
 }
+zonaEnvio.onchange = actualizarCarritoUI;
 
 /***********************
-  4. TU FUNCIÓN DE HORARIOS ORIGINAL
+  4. FUNCIONALIDADES EXTRAS
 ***********************/
 function horarioActivo(categoria) {
     const hora = new Date().getHours();
-    // Restaurado a tus límites exactos:
     if (categoria === "vianda") return hora >= 7 && hora < 23; 
     if (categoria === "rapida") return hora >= 19 && hora < 24;
     return true;
 }
 
+if (btnGps) {
+    btnGps.onclick = () => {
+        gpsStatus.innerText = "Localizando...";
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                linkUbicacionGps = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                gpsStatus.innerHTML = "<b style='color:green'>✅ Lista</b>";
+            },
+            () => { gpsStatus.innerText = "❌ Error GPS"; }
+        );
+    };
+}
+
+metodoPago.onchange = () => {
+    const esMP = metodoPago.value === "mercadopago";
+    btnPagarMP.style.display = esMP ? "block" : "none";
+    confirmacionPago.style.display = esMP ? "block" : "none";
+};
+btnPagarMP.onclick = () => window.open(linkMercadoPago, "_blank");
+
+document.getElementById("formPedido").onsubmit = (e) => {
+    e.preventDefault();
+    if (carrito.length === 0) return;
+    if (metodoPago.value === "mercadopago" && !pagoRealizado.checked) {
+        alert("Por favor, confirma que realizaste el pago."); return;
+    }
+
+    let mensaje = `*Nuevo Pedido - MIL SABORES*%0A%0A*Nombre:* ${nombreInput.value}%0A`;
+    carrito.forEach(i => mensaje += `- ${i.nombre} x${i.cantidad}%0A`);
+    mensaje += `%0A*Zona:* ${zonaEnvio.options[zonaEnvio.selectedIndex].text}`;
+    mensaje += `%0A*Total:* $${totalSpan.innerText}`;
+    if(linkUbicacionGps) mensaje += `%0A📍 *Ubicación:* ${linkUbicacionGps}`;
+
+    window.open(`https://wa.me/5493764726863?text=${mensaje}`, "_blank");
+    carrito = []; 
+    actualizarTodo();
+    document.querySelector(".carrito-panel").classList.add("oculto");
+};
+
 /***********************
-  5. UI Y CIERRE (CORREGIDO)
+  5. UI
 ***********************/
-const btnCarritoIcono = document.querySelector(".carrito-btn");
-const panelCarrito = document.querySelector(".carrito-panel");
-const btnCerrar = document.getElementById("btnCerrarCarrito");
+document.querySelector(".carrito-btn").onclick = () => document.querySelector(".carrito-panel").classList.remove("oculto");
+document.getElementById("btnCerrarCarrito").onclick = () => document.querySelector(".carrito-panel").classList.add("oculto");
 
-if (btnCarritoIcono) btnCarritoIcono.onclick = () => panelCarrito.classList.remove("oculto");
-if (btnCerrar) btnCerrar.onclick = () => panelCarrito.classList.add("oculto");
-
-// Reloj
 setInterval(() => {
     const r = document.getElementById("reloj");
     if(r) r.innerText = `⏰ ${new Date().toLocaleTimeString()}`;
 }, 1000);
 
-// Modo Oscuro
 if (localStorage.getItem("modo") === "oscuro") document.body.classList.add("oscuro");
-if(modoBtn) modoBtn.onclick = () => {
+modoBtn.onclick = () => {
     document.body.classList.toggle("oscuro");
     localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
 };
 
-// INICIO
+function crearFondoEmojis() {
+    const cont = document.getElementById("fondo-emojis");
+    const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑"];
+    for (let i = 0; i < 20; i++) {
+        const span = document.createElement("span");
+        span.className = "emoji-flotante";
+        span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        span.style.left = Math.random() * 100 + "vw";
+        span.style.top = Math.random() * 100 + "vh";
+        cont.appendChild(span);
+    }
+}
+
 cargarProductos();
+crearFondoEmojis();
