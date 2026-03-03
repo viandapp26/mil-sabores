@@ -376,3 +376,25 @@ function actualizarEstadoSecciones() {
 cargarProductos();
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const carritoPanel = document.querySelector(".carrito-panel");
+    const btnAbrir = document.querySelector(".carrito-btn");
+    const btnCerrar = document.getElementById("btnCerrarCarrito");
+
+    // Función para abrir
+    btnAbrir.onclick = function() {
+        carritoPanel.classList.remove("oculto");
+        // Si usas display manual:
+        carritoPanel.style.display = "block";
+    };
+
+    // Función para cerrar (LA QUE PEDISTE)
+    btnCerrar.onclick = function() {
+        carritoPanel.classList.add("oculto");
+        // Si usas display manual:
+        carritoPanel.style.display = "none";
+    };
+});
