@@ -14,9 +14,8 @@
 <header class="encabezado">
     <div class="logo-titulo">
         <h1>MIL SABORES</h1>
-        <img src="logo.png" alt="Logo de Viandapp">
+        <img src="logo.png" alt="Logo de Viandapp" onerror="this.style.display='none'">
     </div>
-    <input type="color" id="fondoColor">
 
     <div class="header-info">
         <div id="reloj">00:00:00</div>
@@ -52,30 +51,34 @@
             <option value="efectivo">Efectivo</option>
             <option value="mercadopago">Billeteras Virtuales</option>
         </select>
-        <button type="button" id="btnPagarMP" style="display:none;">💳 Transferencia</button>
+        <button type="button" id="btnPagarMP" style="display:none;">💳 Ir a pagar</button>
         <label style="display:none;" id="confirmacionPago">
             <input type="checkbox" id="pagoRealizado"> Ya realicé el pago
         </label>
-        <button type="submit" class="confirmar-btn">Confirmar pedido</button>
+        <button type="submit" class="confirmar-btn">Confirmar pedido por WhatsApp</button>
     </form>
 </div>
 
-<h2 class="titulo-seccion">Nuestras Viandas</h2>
+<div class="titulo-container">
+    <h2 class="titulo-seccion">Nuestras Viandas</h2>
+</div>
 <div class="productos-section">
-    <button id="prev-viandas">◀</button>
+    <button id="prev-viandas" class="carrusel-btn">◀</button>
     <div class="carrusel-viewport">
         <div id="carrusel-viandas" class="carrusel"></div>
     </div>
-    <button id="next-viandas">▶</button>
+    <button id="next-viandas" class="carrusel-btn">▶</button>
 </div>
 
-<h2 class="titulo-seccion">Comida Rápida</h2>
+<div class="titulo-container">
+    <h2 class="titulo-seccion">Comida Rápida</h2>
+</div>
 <div class="productos-section">
-    <button id="prev-rapida">◀</button>
+    <button id="prev-rapida" class="carrusel-btn">◀</button>
     <div class="carrusel-viewport">
         <div id="carrusel-rapida" class="carrusel"></div>
     </div>
-    <button id="next-rapida">▶</button>
+    <button id="next-rapida" class="carrusel-btn">▶</button>
 </div>
 
 <div class="frase-cinta">
@@ -84,9 +87,10 @@
 
 <div id="panel-admin" class="panel-admin"></div>
 
-<script src="srcipt.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
+
 
 
 
