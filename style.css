@@ -734,6 +734,38 @@ body.dark-mode .carrito {
   border: 1px solid #333;
 }
 
+
+.cerrar-carrito-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #f0f0f0;
+    border: none;
+    font-size: 20px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: background 0.3s ease;
+    z-index: 10;
+}
+
+.cerrar-carrito-btn:hover {
+    background: #e0e0e0;
+    color: #ff0000; /* Se pone rojo al pasar el mouse */
+}
+
+/* Para que el panel tenga posición relativa y la X no se escape */
+.carrito-panel {
+    position: fixed;
+    /* ... tus otros estilos ... */
+    position: relative; 
+}
+
 /* Formulario */
 body.dark-mode .carrito form {
   background-color: #222;
@@ -794,6 +826,7 @@ body.dark-mode #reloj {
   font-size: 18px;
   z-index: 20;
 }
+
 
 
 
