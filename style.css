@@ -847,78 +847,53 @@ body.dark-mode #reloj {
   font-size: 18px;
   z-index: 20;
 }
-
 /* =========================
-    REFUERZO HORARIO CERRADO
+    BLOQUEO POR HORARIO (MEJORADO)
 ========================= */
 
-/* Este contenedor debe tener posición relativa para que el cartel se pegue a él */
-.carrusel-viewport.seccion-cerrada {
+/* Clase que aplicaremos al contenedor del carrusel */
+.contenedor-bloqueado {
     position: relative;
-    opacity: 0.5;
-    pointer-events: none; /* Evita que toquen los botones */
-    filter: grayscale(100%);
-    min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    filter: grayscale(100%); /* Todo gris */
+    opacity: 0.7;
+    pointer-events: none; /* No permite clicks */
+    user-select: none;
 }
 
-/* El cartel rojo */
-.carrusel-viewport.seccion-cerrada::after {
-    content: "⚠️ CERRADO POR HORARIO";
+/* El cartel de mensaje */
+.cartel-horario {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(255, 0, 0, 0.9);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 50px;
-    font-weight: bold;
+    background: rgba(0, 0, 0, 0.85); /* Negro traslúcido */
+    color: #fff;
+    padding: 20px 30px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 1000;
+    width: 80%;
+    max-width: 300px;
+    border: 2px solid #ffcc00;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.cartel-horario h4 {
+    margin: 0 0 10px 0;
+    color: #ffcc00;
     font-size: 1.2rem;
-    white-space: nowrap;
-    z-index: 100;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    border: 2px solid white;
 }
 
-/* =========================
-    BLOQUEO POR HORARIO
-========================= */
-
-/* Aplicamos a la sección completa para que tape todo */
-.productos-section.seccion-cerrada {
-    position: relative;
-    opacity: 0.6;
-    filter: grayscale(100%);
-    pointer-events: none; /* Bloquea clics */
+.cartel-horario p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
 }
 
-.productos-section.seccion-cerrada::after {
-    content: "🚫 CERRADO POR HORARIO";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #e74c3c;
-    color: white;
-    padding: 15px 30px;
-    border-radius: 50px;
-    font-weight: 800;
-    font-size: 1.1rem;
-    z-index: 999;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-    border: 3px solid white;
-    white-space: nowrap;
-}
-
-/* En móvil el cartel es un poco más pequeño */
+/* Ajuste móvil */
 @media (max-width: 768px) {
-    .productos-section.seccion-cerrada::after {
-        font-size: 0.9rem;
-        padding: 10px 20px;
+    .cartel-horario {
+        width: 70%;
+        padding: 15px;
     }
 }
-
-
