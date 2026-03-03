@@ -268,3 +268,29 @@ function crearFondoEmojis() {
 // INICIO
 cargarProductos();
 crearFondoEmojis();
+
+function verificarApertura() {
+    const hora = new Date().getHours();
+    
+    // Configuración de horarios
+    const horarioViandas = (hora >= 7 && hora < 23);
+    const horarioRapida = (hora >= 19 && hora < 24);
+
+    // Seleccionamos las secciones (el contenedor que envuelve al carrusel)
+    const seccionViandas = document.querySelector('.productos-section:has(#carrusel-viandas)');
+    const seccionRapida = document.querySelector('.productos-section:has(#carrusel-rapida)');
+
+    if (seccionViandas) {
+        if (!horarioViandas) seccionViandas.classList.add("seccion-cerrada");
+        else seccionViandas.classList.remove("seccion-cerrada");
+    }
+
+    if (seccionRapida) {
+        if (!horarioRapida) seccionRapida.classList.add("seccion-cerrada");
+        else seccionRapida.classList.remove("seccion-cerrada");
+    }
+}
+
+// Ejecutar al cargar y cada 1 minuto para actualizar en tiempo real
+verificarApertura();
+setInterval(verificarApertura, 60000);
