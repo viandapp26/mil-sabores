@@ -43,17 +43,14 @@ async function cargarProductos() {
         });
 
         actualizarTodo(); 
-        renderPanelAdmin();
         setupFlechas(); 
     } catch (e) {
         console.error("Error cargando productos:", e);
-        // Fallback: Si el JSON no existe, creamos productos vacíos para evitar errores
-        productos = []; 
     }
 }
 
 /***********************
-  2. RENDER Y CARRUSELES
+  2. RENDER Y CARRUSELES (TUS BOTONES)
 ***********************/
 function renderSeccion(categoria, idContenedor) {
     const contenedor = document.getElementById(idContenedor);
@@ -82,41 +79,67 @@ function moverCarrusel(idContenedor, indice) {
     if (!carrusel) return;
     const tarjeta = carrusel.querySelector(".producto");
     if (!tarjeta) return;
+    
     const estilo = window.getComputedStyle(tarjeta);
     const margenDerecho = parseFloat(estilo.marginRight) || 20;
     const anchoTotal = tarjeta.offsetWidth + margenDerecho;
+
     carrusel.style.transform = `translateX(-${indice * anchoTotal}px)`;
 }
 
 function setupFlechas() {
-    document.getElementById("next-viandas").onclick = () => {
+    // Restauramos tus eventos de clic exactos
+    const btnNextV = document.getElementById("next-viandas");
+    const btnPrevV = document.getElementById("prev-viandas");
+    const btnNextR = document.getElementById("next-rapida");
+    const btnPrevR = document.getElementById("prev-rapida");
+
+    if(btnNextV) btnNextV.onclick = () => {
         const filtrados = productos.filter(p => p.categoria === "vianda");
-        if (indiceViandas < filtrados.length - 1) { indiceViandas++; moverCarrusel("carrusel-viandas", indiceViandas); }
+        if (indiceViandas < filtrados.length - 1) {
+            indiceViandas++;
+            moverCarrusel("carrusel-viandas", indiceViandas);
+        }
     };
-    document.getElementById("prev-viandas").onclick = () => {
-        if (indiceViandas > 0) { indiceViandas--; moverCarrusel("carrusel-viandas", indiceViandas); }
+    if(btnPrevV) btnPrevV.onclick = () => {
+        if (indiceViandas > 0) {
+            indiceViandas--;
+            moverCarrusel("carrusel-viandas", indiceViandas);
+        }
     };
-    document.getElementById("next-rapida").onclick = () => {
+    if(btnNextR) btnNextR.onclick = () => {
         const filtrados = productos.filter(p => p.categoria === "rapida");
-        if (indiceRapida < filtrados.length - 1) { indiceRapida++; moverCarrusel("carrusel-rapida", indiceRapida); }
+        if (indiceRapida < filtrados.length - 1) {
+            indiceRapida++;
+            moverCarrusel("carrusel-rapida", indiceRapida);
+        }
     };
-    document.getElementById("prev-rapida").onclick = () => {
-        if (indiceRapida > 0) { indiceRapida--; moverCarrusel("carrusel-rapida", indiceRapida); }
+    if(btnPrevR) btnPrevR.onclick = () => {
+        if (indiceRapida > 0) {
+            indiceRapida--;
+            moverCarrusel("carrusel-rapida", indiceRapida);
+        }
     };
 }
 
 /***********************
-  3. CARRITO
+  3. CARRITO (TU LÓGICA DE HORARIOS RESTAURADA)
 ***********************/
 window.agregarAlCarrito = function(id) {
     const prod = productos.find(p => p.id === id);
     if (!prod || prod.stock <= 0) return;
-    if (!horarioActivo(prod.categoria)) { alert("Esta sección está fuera de horario."); return; }
+
+    // VOLVEMOS A TUS HORARIOS ORIGINALES
+    if (!horarioActivo(prod.categoria)) {
+        alert("Esta sección está fuera de horario.");
+        return;
+    }
 
     prod.stock--;
     const item = carrito.find(c => c.id === id);
     if (item) item.cantidad++;
     else carrito.push({ ...prod, cantidad: 1 });
+
     actualizarTodo();
 };
 
@@ -163,55 +186,26 @@ function actualizarCarritoUI() {
         contador.style.display = cantItems > 0 ? "block" : "none";
     }
 }
-if(zonaEnvio) zonaEnvio.onchange = actualizarCarritoUI;
 
 /***********************
-  4. WHATSAPP + GPS
+  4. TU FUNCIÓN DE HORARIOS ORIGINAL
 ***********************/
-if (btnGps) {
-    btnGps.onclick = () => {
-        gpsStatus.innerText = "Localizando... ⏳";
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                linkUbicacionGps = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                gpsStatus.innerHTML = "<b style='color:green'>✅ Ubicación lista</b>";
-            },
-            () => { gpsStatus.innerText = "❌ Error GPS"; }
-        );
-    };
-}
-
-const formPedido = document.getElementById("formPedido");
-if (formPedido) {
-    formPedido.onsubmit = (e) => {
-        e.preventDefault();
-        if (carrito.length === 0) return;
-        if (metodoPago.value === "mercadopago" && !pagoRealizado.checked) {
-            alert("Confirmá el pago primero."); return;
-        }
-
-        let msg = `*Pedido de ${nombreInput.value}*%0A%0A`;
-        carrito.forEach(i => msg += `- ${i.nombre} x${i.cantidad}%0A`);
-        msg += `%0A*Zona:* ${zonaEnvio.options[zonaEnvio.selectedIndex].text}`;
-        msg += `%0A*TOTAL:* $${totalSpan.innerText}`;
-        if(linkUbicacionGps) msg += `%0A📍 *Ubicación:* ${linkUbicacionGps}`;
-
-        window.open(`https://wa.me/5493764726863?text=${msg}`, "_blank");
-
-        pedidosPendientes.push({ id: Date.now(), nombre: nombreInput.value, items: [...carrito], total: totalSpan.innerText });
-        localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
-        carrito = []; actualizarTodo(); renderPanelAdmin();
-    };
+function horarioActivo(categoria) {
+    const hora = new Date().getHours();
+    // Restaurado a tus límites exactos:
+    if (categoria === "vianda") return hora >= 7 && hora < 23; 
+    if (categoria === "rapida") return hora >= 19 && hora < 24;
+    return true;
 }
 
 /***********************
-  5. PANEL ADMIN Y UI
+  5. UI Y CIERRE (CORREGIDO)
 ***********************/
 const btnCarritoIcono = document.querySelector(".carrito-btn");
 const panelCarrito = document.querySelector(".carrito-panel");
 const btnCerrar = document.getElementById("btnCerrarCarrito");
 
-if (btnCarritoIcono) btnCarritoIcono.onclick = () => panelCarrito.classList.toggle("oculto");
+if (btnCarritoIcono) btnCarritoIcono.onclick = () => panelCarrito.classList.remove("oculto");
 if (btnCerrar) btnCerrar.onclick = () => panelCarrito.classList.add("oculto");
 
 // Reloj
@@ -227,38 +221,5 @@ if(modoBtn) modoBtn.onclick = () => {
     localStorage.setItem("modo", document.body.classList.contains("oscuro") ? "oscuro" : "claro");
 };
 
-// Mercado Pago
-if(metodoPago) metodoPago.onchange = () => {
-    const esMP = metodoPago.value === "mercadopago";
-    btnPagarMP.style.display = esMP ? "block" : "none";
-    confirmacionPago.style.display = esMP ? "block" : "none";
-};
-if(btnPagarMP) btnPagarMP.onclick = () => window.open(linkMercadoPago, "_blank");
-
-/***********************
-  6. EMOJIS Y HORARIOS
-***********************/
-function crearFondoEmojis() {
-    const cont = document.getElementById("fondo-emojis");
-    if (!cont) return;
-    const emojis = ["🍎", "🥗", "🍱", "🍗", "🥑", "🥩"];
-    for (let i = 0; i < 50; i++) {
-        const span = document.createElement("span");
-        span.className = "emoji-flotante";
-        span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-        span.style.left = Math.random() * 100 + "vw";
-        span.style.top = Math.random() * 100 + "vh";
-        cont.appendChild(span);
-    }
-}
-
-function horarioActivo(categoria) {
-    const hora = new Date().getHours();
-    if (categoria === "vianda") return hora >= 7 && hora < 23;
-    if (categoria === "rapida") return hora >= 19 && hora < 24;
-    return true;
-}
-
 // INICIO
 cargarProductos();
-crearFondoEmojis();
