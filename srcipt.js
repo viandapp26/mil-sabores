@@ -269,28 +269,55 @@ function crearFondoEmojis() {
 cargarProductos();
 crearFondoEmojis();
 
-function verificarApertura() {
-    const hora = new Date().getHours();
-    
-    // Configuración de horarios
-    const horarioViandas = (hora >= 7 && hora < 23);
-    const horarioRapida = (hora >= 19 && hora < 24);
+function aplicarBloqueoHorario() {
+    const ahora = new Date();
+    const hora = ahora.getHours();
 
-    // Seleccionamos las secciones (el contenedor que envuelve al carrusel)
-    const seccionViandas = document.querySelector('.productos-section:has(#carrusel-viandas)');
-    const seccionRapida = document.querySelector('.productos-section:has(#carrusel-rapida)');
+    // Configuración de horarios y mensajes
+    const configuracion = [
+        {
+            id: "carrusel-viandas",
+            abierto: (hora >= 7 && hora < 23),
+            mensaje: "CERRADO POR HORARIO",
+            vuelve: "7:00 hs"
+        },
+        {
+            id: "carrusel-rapida",
+            abierto: (hora >= 19 && hora < 24),
+            mensaje: "CERRADO POR HORARIO",
+            vuelve: "19:00 hs"
+        }
+    ];
 
-    if (seccionViandas) {
-        if (!horarioViandas) seccionViandas.classList.add("seccion-cerrada");
-        else seccionViandas.classList.remove("seccion-cerrada");
-    }
+    configuracion.forEach(seccion => {
+        const carrusel = document.getElementById(seccion.id);
+        if (!carrusel) return;
 
-    if (seccionRapida) {
-        if (!horarioRapida) seccionRapida.classList.add("seccion-cerrada");
-        else seccionRapida.classList.remove("seccion-cerrada");
-    }
+        // El padre directo que queremos poner gris
+        const contenedor = carrusel.parentElement;
+
+        // Limpiamos bloqueos previos para no duplicar
+        contenedor.classList.remove("contenedor-bloqueado");
+        const cartelPrevio = contenedor.querySelector(".cartel-horario");
+        if (cartelPrevio) cartelPrevio.remove();
+
+        if (!seccion.abierto) {
+            // Aplicamos clase gris
+            contenedor.classList.add("contenedor-bloqueado");
+
+            // Creamos el cartel dinámicamente
+            const cartel = document.createElement("div");
+            cartel.className = "cartel-horario";
+            cartel.innerHTML = `
+                <h4>${seccion.mensaje}</h4>
+                <p>Volveremos a las <b>${seccion.vuelve}</b>.<br>¡Te esperamos!</p>
+            `;
+            contenedor.appendChild(cartel);
+        }
+    });
 }
 
-// Ejecutar al cargar y cada 1 minuto para actualizar en tiempo real
-verificarApertura();
-setInterval(verificarApertura, 60000);
+// Ejecutar al cargar
+aplicarBloqueoHorario();
+// Revisar cada minuto
+setInterval(aplicarBloqueoHorario, 60000);
