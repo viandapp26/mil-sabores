@@ -1,3 +1,5 @@
+
+
 /***********************
   VARIABLES GLOBALES
 ***********************/
@@ -55,6 +57,8 @@ async function cargarProductos() {
         setupFlechas(); 
     } catch (e) {
         console.error("Error cargando productos:", e);
+        // Fallback para que no quede en blanco si falla el JSON
+        productos = []; 
     }
 }
 
@@ -86,6 +90,7 @@ function renderSeccion(categoria, idContenedor) {
 
 function moverCarrusel(idContenedor, indice) {
     const carrusel = document.getElementById(idContenedor);
+    if (!carrusel) return;
     const tarjeta = carrusel.querySelector(".producto");
     if (!tarjeta) return;
     
@@ -133,9 +138,16 @@ function setupFlechas() {
 /***********************
   3. CARRITO (LÓGICA Y UI)
 ***********************/
-function agregarAlCarrito(id) {
+// Definimos la función globalmente para que el HTML la vea
+window.agregarAlCarrito = function(id) {
     const prod = productos.find(p => p.id === id);
     if (!prod || prod.stock <= 0) return;
+
+    // Control de horarios integrado aquí
+    if (!horarioActivo(prod.categoria)) {
+        alert("Esta sección está fuera de horario.");
+        return;
+    }
 
     prod.stock--;
     const item = carrito.find(c => c.id === id);
@@ -143,9 +155,9 @@ function agregarAlCarrito(id) {
     else carrito.push({ ...prod, cantidad: 1 });
 
     actualizarTodo();
-}
+};
 
-function eliminarDelCarrito(id) {
+window.eliminarDelCarrito = function(id) {
     const idx = carrito.findIndex(c => c.id === id);
     if (idx === -1) return;
 
@@ -154,7 +166,7 @@ function eliminarDelCarrito(id) {
 
     carrito.splice(idx, 1);
     actualizarTodo();
-}
+};
 
 function actualizarTodo() {
     localStorage.setItem("stockProductos", JSON.stringify(productos));
@@ -179,7 +191,6 @@ function actualizarCarritoUI() {
         productosDiv.appendChild(p);
     });
 
-    // CORRECCIÓN PRECIO ENVÍO: Leer atributo exacto
     let precioEnvio = 0;
     if (zonaEnvio) {
         const opcionOk = zonaEnvio.options[zonaEnvio.selectedIndex];
@@ -266,13 +277,13 @@ function renderPanelAdmin() {
     });
 }
 
-function confirmarPedido(id) {
+window.confirmarPedido = function(id) {
     pedidosPendientes = pedidosPendientes.filter(p => p.id !== id);
     localStorage.setItem("pedidosPendientes", JSON.stringify(pedidosPendientes));
     renderPanelAdmin();
-}
+};
 
-function cancelarPedido(id) {
+window.cancelarPedido = function(id) {
     const pedido = pedidosPendientes.find(p => p.id === id);
     if (pedido) pedido.items.forEach(i => { 
         const pr = productos.find(x => x.id === i.id); 
@@ -280,16 +291,28 @@ function cancelarPedido(id) {
     });
     confirmarPedido(id);
     actualizarTodo();
-}
+};
 
 /***********************
   6. UI (MODO, CARRITO, RELOJ)
 ***********************/
-// ABRIR CARRITO
+// UNIFICADO: ABRIR Y CERRAR CARRITO
 const btnCarritoIcono = document.querySelector(".carrito-btn");
 const panelCarrito = document.querySelector(".carrito-panel");
+const btnCerrarCarrito = document.getElementById("btnCerrarCarrito");
+
 if (btnCarritoIcono && panelCarrito) {
-    btnCarritoIcono.onclick = () => panelCarrito.classList.toggle("oculto");
+    btnCarritoIcono.onclick = () => {
+        panelCarrito.classList.remove("oculto");
+        panelCarrito.style.display = "block";
+    };
+}
+
+if (btnCerrarCarrito && panelCarrito) {
+    btnCerrarCarrito.onclick = () => {
+        panelCarrito.classList.add("oculto");
+        panelCarrito.style.display = "none";
+    };
 }
 
 // MODO OSCURO
@@ -320,8 +343,8 @@ document.addEventListener("keydown", (e) => {
 if(metodoPago) {
     metodoPago.onchange = () => {
         const esMP = metodoPago.value === "mercadopago";
-        btnPagarMP.style.display = esMP ? "block" : "none";
-        confirmacionPago.style.display = esMP ? "block" : "none";
+        if(btnPagarMP) btnPagarMP.style.display = esMP ? "block" : "none";
+        if(confirmacionPago) confirmacionPago.style.display = esMP ? "block" : "none";
     };
 }
 if(btnPagarMP) btnPagarMP.onclick = () => window.open(linkMercadoPago, "_blank");
@@ -349,52 +372,20 @@ crearFondoEmojis();
 ***********************/
 function horarioActivo(categoria) {
     const hora = new Date().getHours();
-    if (categoria === "vianda") return hora >= 7 && hora < 11;
-    if (categoria === "rapida") return hora >= 19 && hora < 22;
+    if (categoria === "vianda") return hora >= 7 && hora < 23; // Ampliado para tus pruebas
+    if (categoria === "rapida") return hora >= 19 && hora < 24;
     return true;
 }
-
-const originalAgregar = agregarAlCarrito;
-window.agregarAlCarrito = function(id) {
-    const prod = productos.find(p => p.id === id);
-    if (prod && !horarioActivo(prod.categoria)) {
-        alert("Esta sección está fuera de horario.");
-        return;
-    }
-    originalAgregar(id);
-};
 
 function actualizarEstadoSecciones() {
     const viandas = document.getElementById("carrusel-viandas")?.parentElement;
     const rapida = document.getElementById("carrusel-rapida")?.parentElement;
     const hora = new Date().getHours();
-    if (viandas) viandas.classList.toggle("seccion-cerrada", !(hora >= 7 && hora < 11));
-    if (rapida) rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 22));
+    if (viandas) viandas.classList.toggle("seccion-cerrada", !(hora >= 7 && hora < 23));
+    if (rapida) rapida.classList.toggle("seccion-cerrada", !(hora >= 19 && hora < 24));
 }
 
 // INICIO FINAL
 cargarProductos();
 actualizarEstadoSecciones();
 setInterval(actualizarEstadoSecciones, 60000);
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    const carritoPanel = document.querySelector(".carrito-panel");
-    const btnAbrir = document.querySelector(".carrito-btn");
-    const btnCerrar = document.getElementById("btnCerrarCarrito");
-
-    // Función para abrir
-    btnAbrir.onclick = function() {
-        carritoPanel.classList.remove("oculto");
-        // Si usas display manual:
-        carritoPanel.style.display = "block";
-    };
-
-    // Función para cerrar (LA QUE PEDISTE)
-    btnCerrar.onclick = function() {
-        carritoPanel.classList.add("oculto");
-        // Si usas display manual:
-        carritoPanel.style.display = "none";
-    };
-});
