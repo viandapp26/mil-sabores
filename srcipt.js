@@ -279,9 +279,9 @@ function aplicarBloqueoHorario() {
         {
             id: "carrusel-viandas",
             // Lunes (1) a Viernes (5) + Horario 7 a 23
-            abierto: (diaSemana >= 1 && diaSemana <= 5) && (hora >= 7 && hora < 23),
+            abierto: (diaSemana >= 1 && diaSemana <= 5) && (hora >= 7 && hora < 13),
             mensaje: "CERRADO POR HORARIO",
-            horarioTexto: "Lun. a Vie. de 07:00 a 23:00 hs",
+            horarioTexto: "Lun. a Vie. de 07:00 a 13:00 hs",
             vuelve: (diaSemana >= 1 && diaSemana < 5) ? "mañana a las 07:00 hs" : "el Lunes a las 07:00 hs"
         },
         {
@@ -324,3 +324,4 @@ function aplicarBloqueoHorario() {
 // Ejecutar
 aplicarBloqueoHorario();
 setInterval(aplicarBloqueoHorario, 60000);
+
